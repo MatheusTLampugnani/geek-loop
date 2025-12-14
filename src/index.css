@@ -1,68 +1,63 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  width: 100%;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+/* --- ESTILO DAS CATEGORIAS --- */
+.category-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 12px 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  min-width: max-content;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.category-card:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: var(--neon-primary);
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(139, 92, 246, 0.2);
+}
+
+.category-card span.icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
+}
+
+.category-card span.text {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.category-card:hover span.text {
+  color: white;
+}
+
+.section-title-container {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.section-title-line {
+  height: 4px;
+  width: 60px;
+  background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary));
+  border-radius: 2px;
+  margin-top: 5px;
 }
