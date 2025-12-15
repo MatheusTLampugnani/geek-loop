@@ -441,3 +441,17 @@ footer .border-top {
     padding-top: 120px;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+section {
+  scroll-margin-top: 100px;
+}
+
+@media (max-width: 768px) {
+  section {
+    scroll-margin-top: 140px;
+  }
+}
