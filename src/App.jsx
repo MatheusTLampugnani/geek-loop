@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import './App.css';
 import logo from './assets/logo1.jpeg';
+import comboImg from './assets/combo-gamer.png';
 import { CartProvider, useCart } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
 import { ProductModal } from './components/ProductModal';
@@ -131,7 +132,7 @@ function HomePage({ setSelectedProduct }) {
             </div>
             <div className="col-lg-6 d-flex align-items-center justify-content-center position-relative py-4" style={{minHeight: '250px'}}>
                <div className="position-absolute rounded-circle" style={{width: '200px', height: '200px', background: 'var(--neon-primary)', filter: 'blur(90px)', opacity: 0.2}}></div>
-               <img src="src\assets\combo-gamer.png" alt="Combo Gamer" className="img-fluid position-relative z-1 rounded-3 shadow-lg" style={{maxWidth: '80%', transform: 'rotate(-5deg)', border: '1px solid rgba(255,255,255,0.1)'}} />
+               <img src={comboImg} alt="Combo Gamer" className="img-fluid position-relative z-1 rounded-3 shadow-lg" style={{maxWidth: '80%', transform: 'rotate(-5deg)', border: '1px solid rgba(255,255,255,0.1)'}} />
             </div>
           </div>
         </div>
