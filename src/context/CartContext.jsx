@@ -6,10 +6,8 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Adicionar considerando a VARIAÇÃO escolhida
   const addToCart = (product, quantity, selectedOption) => {
     setCartItems(prev => {
-      // Criamos um ID único para o item no carrinho (ID do produto + Opção)
       const cartItemId = selectedOption ? `${product.id}-${selectedOption}` : `${product.id}`;
 
       const existing = prev.find(item => item.cartItemId === cartItemId);
@@ -24,9 +22,9 @@ export function CartProvider({ children }) {
 
       return [...prev, { 
         ...product, 
-        cartItemId, // Identificador único no carrinho
+        cartItemId,
         quantity, 
-        selectedOption // A variação escolhida (ex: "Switch Blue")
+        selectedOption
       }];
     });
     setIsCartOpen(true);
@@ -37,7 +35,7 @@ export function CartProvider({ children }) {
   };
 
   const cartTotal = cartItems.reduce((acc, item) => acc + (item.preco * item.quantity), 0);
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0); // Para o badge do botão
+  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <CartContext.Provider value={{ 

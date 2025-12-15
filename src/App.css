@@ -455,3 +455,21 @@ section {
     scroll-margin-top: 140px;
   }
 }
+
+.card-category:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--neon-primary) !important;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.card-category:hover .icon-wrapper {
+  background: var(--neon-primary) !important;
+  color: #000;
+  box-shadow: 0 0 15px var(--neon-primary);
+  border-color: transparent !important;
+}
+
+.card-category:hover h5 {
+  color: var(--neon-primary);
+}

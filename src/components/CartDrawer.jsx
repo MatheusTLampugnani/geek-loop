@@ -38,7 +38,7 @@ export function CartDrawer() {
         <div className="flex-grow-1 overflow-auto" style={{scrollbarWidth: 'thin'}}>
           {cartItems.length === 0 ? (
             <div className="text-center text-muted mt-5">
-                <p>O carrinho está vazio.</p>
+                <p style={{ color: '#ffffffff' }}>O carrinho está vazio.</p>
             </div>
           ) : (
             cartItems.map(item => (
