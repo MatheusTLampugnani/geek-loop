@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import './App.css';
 import logo from './assets/logo1.jpeg';
@@ -6,7 +6,8 @@ import comboImg from './assets/combo-gamer.png';
 import { CartProvider, useCart } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
 import { ProductModal } from './components/ProductModal';
-import { PRODUCTS, CATEGORIES, PROMO_ITEMS } from './data/db';
+import { supabase } from './supabase';
+import { CATEGORIES } from './data/db'; 
 import { CategoryPage } from './pages/CategoryPage';
 import { AllProductsPage } from './pages/AllProductsPage';
 
@@ -31,14 +32,13 @@ function ProductCard({ p, onSelect }) {
       <div className="card-img-wrapper">
         {p.badge && <span className="product-tag">{p.badge}</span>}
         <ProductImage src={p.imagem_url} gradient={p.gradient} alt={p.nome}/>
-        <link rel="stylesheet" href="#" />
       </div>
       <div className="p-3 d-flex flex-column flex-grow-1">
         <span className="badge-category align-self-start mb-1" style={{fontSize: '0.6rem'}}>{p.category}</span>
         <h6 className="fw-bold text-white mb-1 text-truncate" style={{fontSize: '0.95rem'}}>{p.nome}</h6>
         <div className="mt-auto pt-2 d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25">
           <div>
-            <div className="fw-bold text-white" style={{fontSize: '1rem'}}>R$ {p.price.toFixed(2)}</div>
+            <div className="fw-bold text-white" style={{fontSize: '1rem'}}>R$ {p.preco.toFixed(2)}</div>
             <div className="text-muted" style={{fontSize: '0.65rem'}}>10x s/ juros</div>
           </div>
           <button className="btn-quick-add"><PlusIcon /></button>
@@ -49,13 +49,54 @@ function ProductCard({ p, onSelect }) {
 }
 
 function HomePage({ setSelectedProduct }) {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetchHomeData();
+  }, []);
+
+async function fetchHomeData() {
+    try {
+      const { data, error } = await supabase
+        .from('produtos')
+        .select(`
+          *,
+          categorias ( nome )
+        `)
+        .limit(10);
+
+      if (error) {
+        console.error("Erro Supabase:", error.message);
+        throw error;
+      }
+
+      if (data) {
+        const formattedData = data.map(item => ({
+          ...item,
+          nome: item.nome,      
+          preco: item.preco,
+          category: item.categorias?.nome || 'Geral',
+          imagem_url: item.imagem_url 
+        }));
+        
+        setProducts(formattedData);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar home:", error);
+    }
+  }
+
+  const destaques = products.slice(0, 4);
+  const ofertas = products.slice(4, 8);
+
   return (
     <>
       <section id="home" className="hero-gradient rounded-4 p-4 text-center position-relative overflow-hidden mb-4 mt-3">
          <div className="position-relative z-1">
-            <span className="badge-category mb-2">✨ LANÇAMENTOS 2025</span>
-            <h2 className="fw-bold text-white my-2">Tecnologia Premium</h2>
-            <p className="text-secondary small mb-3">Onde o mundo geek nunca para, Tecnologia e cultura em um só lugar.</p>
+            <span className="badge-category mb-2">🚗 PRODUTOS Á PRONTA ENTREGA</span>
+            <span className="badge-category mb-2">⚡ ENTREGA RÁPIDA</span>
+            <h2 className="fw-bold text-white my-2">Onde o mundo geek nunca para!</h2>
+            <h2 className="text-secondary small mb-3">Tecnologia e cultura em um só lugar.</h2>
             <button className="btn-neon px-4 py-2" onClick={() => document.getElementById('products').scrollIntoView({behavior: 'smooth'})}>VER CATÁLOGO</button>
          </div>
       </section>
@@ -89,14 +130,18 @@ function HomePage({ setSelectedProduct }) {
       <section id="products" className="mb-5">
         <div className="d-flex justify-content-between align-items-center mb-3 px-1">
           <h5 className="fw-bold text-white mb-0">Destaques</h5>
-          <a href="#" style={{ color: 'var(--neon-primary)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver tudo →</a>
+          <Link to="/todos-produtos" style={{ color: 'var(--neon-primary)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver tudo →</Link>
         </div>
         <div className="row g-2 g-md-4">
-          {PRODUCTS.map(p => (
-            <div key={p.id} className="col-6 col-md-4 col-lg-3">
-              <ProductCard p={p} onSelect={setSelectedProduct} />
-            </div>
-          ))}
+          {destaques.length > 0 ? (
+            destaques.map(p => (
+              <div key={p.id} className="col-6 col-md-4 col-lg-3">
+                <ProductCard p={p} onSelect={setSelectedProduct} />
+              </div>
+            ))
+          ) : (
+            <div className="text-white text-center w-100 py-4">Carregando destaques...</div>
+          )}
         </div>
       </section>
 
@@ -106,14 +151,18 @@ function HomePage({ setSelectedProduct }) {
              <h5 className="fw-bold text-white mb-0" style={{color: '#ff4d4d'}}>Ofertas da Semana</h5>
              <div className="section-title-line" style={{background: 'linear-gradient(90deg, #ff4d4d, transparent)'}}></div>
           </div>
-          <a href="#" style={{ color: '#ff4d4d', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver todas →</a>
+          <Link to="/todos-produtos" style={{ color: '#ff4d4d', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver todas →</Link>
         </div>
         <div className="row g-2 g-md-4">
-          {PROMO_ITEMS.map(p => (
-            <div key={p.id} className="col-6 col-md-4 col-lg-3">
-              <ProductCard p={p} onSelect={setSelectedProduct} />
-            </div>
-          ))}
+          {ofertas.length > 0 ? (
+             ofertas.map(p => (
+               <div key={p.id} className="col-6 col-md-4 col-lg-3">
+                 <ProductCard p={p} onSelect={setSelectedProduct} />
+               </div>
+             ))
+          ) : (
+             <div className="text-white text-center w-100 py-4 opacity-50 small">Carregando ofertas...</div>
+          )}
         </div>
       </section>
 
@@ -170,7 +219,7 @@ function StoreContent() {
             </div>
 
             <div className="d-none d-md-flex align-items-center gap-4 position-absolute start-50 translate-middle-x">
-              <Link to="/" className="nav-link-custom">Início</Link>
+              <a href="/#home" className="nav-link-custom">Início</a>
               <a href="/#products" className="nav-link-custom">Destaques</a>
               <a href="/#promo-list" className="nav-link-custom">Promos</a>
               <a href="/#promotions" className="nav-link-custom">Combo</a>
@@ -184,7 +233,7 @@ function StoreContent() {
 
           <div className="container d-md-none mt-2 w-100">
              <div className="mobile-nav-scroll">
-                <Link to="/" className="mobile-nav-link">Início</Link>
+                <a href="/#home" className="mobile-nav-link">Início</a>
                 <a href="/#products" className="mobile-nav-link">Destaques</a>
                 <a href="/#promo-list" className="mobile-nav-link">Promos</a>
                 <a href="/#promotions" className="mobile-nav-link">Combo</a>
@@ -216,7 +265,7 @@ function StoreContent() {
               <div className="col-md-3">
                 <h5 className="mb-3">Navegação</h5>
                 <ul className="list-unstyled small d-flex flex-column gap-2">
-                  <li><Link to="/" className="text-decoration-none">Início</Link></li>
+                  <li><a href="/#home" className="text-decoration-none">Início</a></li>
                   <li><Link to="/todos-produtos" className="text-decoration-none">Catálogo Completo</Link></li>
                   <li><a href="/#products" className="text-decoration-none">Destaques</a></li>
                 </ul>
