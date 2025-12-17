@@ -1,210 +1,72 @@
-/* Fundo escuro atrás do modal */
+/* Fundo e Container */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.85); /* Escuro e transparente */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(5px);
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85); z-index: 1000;
+  display: flex; justify-content: center; align-items: center;
 }
 
-/* O container do modal */
 .modal-container {
-  background-color: #121212;
-  width: 900px;
-  max-width: 95%;
-  border-radius: 8px;
-  position: relative;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  color: #fff;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow: hidden;
+  background: #121212; width: 900px; max-width: 95%;
+  border-radius: 8px; position: relative; display: flex;
+  color: #fff; overflow: hidden;
 }
-
-/* Botão de fechar (X) */
 .close-btn {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 2rem;
-  cursor: pointer;
-  z-index: 10;
+  position: absolute; top: 10px; right: 20px;
+  background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;
 }
 
-.modal-body {
-  display: flex;
-  flex-direction: row;
-}
-
-/* Coluna da Imagem */
+.modal-body { display: flex; width: 100%; }
 .image-column {
-  width: 45%;
-  background-color: #1a1a1a;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  width: 50%; background: #000;
+  display: flex; justify-content: center; align-items: center; padding: 20px;
 }
+.image-column img { max-width: 100%; max-height: 400px; object-fit: contain; }
 
-.image-column img {
-  max-width: 100%;
-  max-height: 400px;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-/* Coluna de Texto */
-.info-column {
-  width: 55%;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-}
+.info-column { width: 50%; padding: 40px; display: flex; flex-direction: column; }
 
 .category-tag {
-  background-color: #333;
-  color: #ffd700;
-  font-size: 0.75rem;
-  padding: 4px 8px;
-  border-radius: 4px;
-  width: fit-content;
-  margin-bottom: 10px;
-  font-weight: bold;
-  text-transform: uppercase;
+  background: #333; color: #ffd700; font-size: 0.8rem;
+  padding: 4px 8px; border-radius: 4px; width: fit-content; margin-bottom: 10px;
 }
-
-.product-title {
-  font-size: 1.8rem;
-  margin: 0 0 10px 0;
-  line-height: 1.2;
-}
-
+.product-title { margin: 0 0 10px 0; font-size: 1.8rem; }
 .product-price {
-  font-size: 1.5rem;
-  color: #ffd700; /* Amarelo */
-  font-weight: bold;
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
+  font-size: 1.5rem; color: #ffd700; font-weight: bold; margin-bottom: 20px;
+  display: flex; flex-direction: column;
 }
+.product-price span { font-size: 0.9rem; color: #888; font-weight: normal; }
+.product-description { color: #ccc; line-height: 1.5; margin-bottom: 25px; }
 
-.installment-info {
-  font-size: 0.9rem;
-  color: #888;
-  font-weight: normal;
-  margin-top: 4px;
-}
-
-.product-description {
-  color: #ccc;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-bottom: 25px;
-}
-
-/* Seletores de Opção (Cores) */
-.options-selector label {
-  display: block;
-  font-size: 0.9rem;
-  color: #888;
-  margin-bottom: 8px;
-}
-
-.options-grid {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 25px;
-}
-
+.options-selector { margin-bottom: 20px; }
+.options-selector label { display: block; margin-bottom: 8px; color: #aaa; font-size: 0.9rem; }
+.options-grid { display: flex; gap: 10px; flex-wrap: wrap; }
 .option-btn {
-  background: transparent;
-  border: 1px solid #444;
-  color: #fff;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: 0.3s;
+  background: transparent; border: 1px solid #444; color: #fff;
+  padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: 0.2s;
 }
-
-.option-btn:hover {
-  border-color: #ffd700;
-}
-
+.option-btn:hover { border-color: #ffd700; }
 .option-btn.active {
-  background-color: #ffd700;
-  color: #000;
-  border-color: #ffd700;
-  font-weight: bold;
+  background: #ffd700; color: #000; border-color: #ffd700; font-weight: bold;
 }
 
-/* Linha de Ação (Quantidade + Botão) */
-.action-row {
-  display: flex;
-  gap: 15px;
-  margin-top: auto; /* Empurra para baixo se sobrar espaço */
-}
-
+.action-row { display: flex; gap: 15px; margin-top: auto; }
 .quantity-control {
-  display: flex;
-  align-items: center;
-  border: 1px solid #444;
-  border-radius: 4px;
-  background: #000;
+  display: flex; align-items: center; background: #000;
+  border: 1px solid #444; border-radius: 4px;
 }
-
 .quantity-control button {
-  background: none;
-  border: none;
-  color: #fff;
-  padding: 0 15px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  height: 45px;
+  background: none; border: none; color: #fff;
+  width: 40px; height: 45px; font-size: 1.2rem; cursor: pointer;
 }
-
-.quantity-control span {
-  min-width: 30px;
-  text-align: center;
-  font-weight: bold;
-}
+.quantity-control span { width: 30px; text-align: center; font-weight: bold; }
 
 .add-cart-btn {
-  flex-grow: 1;
-  background-color: #ffd700;
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  height: 45px;
-  transition: opacity 0.2s;
+  flex: 1; background: #ffd700; color: #000;
+  border: none; border-radius: 4px; font-weight: bold; cursor: pointer;
+  height: 45px; font-size: 1rem;
 }
+.add-cart-btn:hover { opacity: 0.9; }
 
-.add-cart-btn:hover {
-  opacity: 0.9;
-}
-
-/* Responsividade para celular */
 @media (max-width: 768px) {
-  .modal-body {
-    flex-direction: column;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .image-column, .info-column {
-    width: 100%;
-  }
-  .image-column {
-    padding: 10px;
-    background: #000;
-  }
+  .modal-body { flex-direction: column; max-height: 90vh; overflow-y: auto; }
+  .image-column, .info-column { width: 100%; }
 }

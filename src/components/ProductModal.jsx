@@ -8,30 +8,31 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   useEffect(() => {
     if (isOpen && product) {
       setQuantity(1);
-      setSelectedOption(product.options && product.options.length > 0 ? product.options[0] : null);
+      setSelectedOption(
+        product.options && product.options.length > 0 ? product.options[0] : null
+      );
     }
   }, [isOpen, product]);
 
   if (!isOpen || !product) return null;
 
   const handleIncrease = () => setQuantity(prev => prev + 1);
-  
   const handleDecrease = () => {
     if (quantity > 1) setQuantity(prev => prev - 1);
   };
 
   const handleAddToCartClick = () => {
-    const cartItem = {
-      id: product.id,
-      title: product.title,
-      price: product.price,
-      image: product.image,
+    const itemParaCarrinho = {
+      ...product,
       quantity: quantity,
-      selectedOption: selectedOption,
+      selectedOption: selectedOption, 
       totalPrice: product.price * quantity
     };
 
-    onAddToCart(cartItem);
+    console.log("Enviando para o carrinho:", itemParaCarrinho);
+    
+    onAddToCart(itemParaCarrinho);
+    
     onClose();
   };
 
@@ -51,17 +52,17 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
             <h2 className="product-title">{product.title}</h2>
             
             <div className="product-price">
-              R$ {product.price.toFixed(2)}
+              R$ {Number(product.price).toFixed(2)}
               <span className="installment-info">em até 10x sem juros</span>
             </div>
 
-            <p className="product-description">
-              {product.description}
-            </p>
+            <div className="product-description">
+              <p>{product.description || "Sem descrição disponível."}</p>
+            </div>
 
             {product.options && product.options.length > 0 && (
               <div className="options-selector">
-                <label>Escolha a versão:</label>
+                <label>Escolha a opção:</label>
                 <div className="options-grid">
                   {product.options.map((option) => (
                     <button
