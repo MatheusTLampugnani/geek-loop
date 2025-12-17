@@ -6,7 +6,7 @@ import comboImg from './assets/combo-gamer.png';
 import { CartProvider, useCart } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
 import ProductModal from './components/ProductModal';
-import { supabase } from './supabase';
+import { supabase } from './supabaseClient'; // Verifique se o nome do arquivo é supabase.js ou supabaseClient.js
 import { CATEGORIES } from './data/db'; 
 import CategoryPage from './pages/CategoryPage';
 import { AllProductsPage } from './pages/AllProductsPage';
@@ -50,34 +50,44 @@ function ProductCard({ p, onSelect }) {
 
 function HomePage({ setSelectedProduct }) {
   const [products, setProducts] = useState([]);
+  const BUCKET_NAME = 'imagens-produtos'; // Confirme se é este o nome do seu bucket no Supabase
 
   useEffect(() => {
     fetchHomeData();
   }, []);
 
-async function fetchHomeData() {
+  async function fetchHomeData() {
     try {
       const { data, error } = await supabase
         .from('produtos')
-        .select(`
-          *,
-          categorias ( nome )
-        `)
+        .select(`*, categorias ( nome )`)
         .limit(10);
 
-      if (error) {
-        console.error("Erro Supabase:", error.message);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data) {
-        const formattedData = data.map(item => ({
-          ...item,
-          nome: item.nome,      
-          preco: item.preco,
-          category: item.categorias?.nome || 'Geral',
-          imagem_url: item.imagem_url 
-        }));
+        const formattedData = data.map(item => {
+          let imageUrl = item.imagem_url; // Use o nome exato da coluna no banco
+
+          if (imageUrl && !imageUrl.startsWith('http')) {
+             const { data: imageData } = supabase
+               .storage
+               .from(BUCKET_NAME)
+               .getPublicUrl(imageUrl);
+             imageUrl = imageData.publicUrl;
+          }
+
+          return {
+            ...item,
+            image: imageUrl, // O Modal espera 'image'
+            imagem_url: imageUrl, // O ProductCard usa 'imagem_url'
+            title: item.nome, // O Modal espera 'title'
+            price: item.preco, // O Modal espera 'price'
+            description: item.descricao, // O Modal espera 'description'
+            category: item.categorias?.nome || 'Geral',
+            options: item.options || [] // Garante array para o Modal
+          };
+        });
         
         setProducts(formattedData);
       }
@@ -93,7 +103,7 @@ async function fetchHomeData() {
     <>
       <section id="home" className="hero-gradient rounded-4 p-4 text-center position-relative overflow-hidden mb-4 mt-3">
          <div className="position-relative z-1">
-            <span className="badge-category mb-2">🚗 PRODUTOS Á PRONTA ENTREGA</span>
+            <span className="badge-category mb-2">🚗 PRODUTOS À PRONTA ENTREGA</span>
             <span className="badge-category mb-2">⚡ ENTREGA RÁPIDA</span>
             <h2 className="fw-bold text-white my-2">Onde o mundo geek nunca para!</h2>
             <h2 className="text-secondary small mb-3">Tecnologia e cultura em um só lugar.</h2>
@@ -197,8 +207,13 @@ async function fetchHomeData() {
 }
 
 function StoreContent() {
-  const { setIsCartOpen, totalItems } = useCart();
+  const { setIsCartOpen, totalItems, addToCart } = useCart();
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const handleAddToCart = (item) => {
+    addToCart(item); // Chama a função global do carrinho
+    setSelectedProduct(null); // Fecha o modal
+  };
 
   return (
     <BrowserRouter>
@@ -286,7 +301,15 @@ function StoreContent() {
         </footer>
 
         <CartDrawer />
-        {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+        
+        {selectedProduct && (
+          <ProductModal 
+            isOpen={!!selectedProduct} // Passa true se tiver produto selecionado
+            product={selectedProduct} 
+            onClose={() => setSelectedProduct(null)}
+            onAddToCart={handleAddToCart} // ESSA É A PEÇA QUE FALTAVA
+          />
+        )}
       </div>
     </BrowserRouter>
   );

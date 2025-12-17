@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { supabase } from '../supabaseClient';
 import ProductModal from '../components/ProductModal';
 import './CategoryPage.css';
 
