@@ -5,7 +5,7 @@ import logo from './assets/logo1.jpeg';
 import comboImg from './assets/combo-gamer.png';
 import { CartProvider, useCart } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
-import { ProductModal } from './components/ProductModal';
+import ProductModal from './components/ProductModal';
 import { supabase } from './supabase';
 import { CATEGORIES } from './data/db'; 
 import { CategoryPage } from './pages/CategoryPage';
