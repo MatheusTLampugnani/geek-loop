@@ -32,7 +32,6 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     console.log("Enviando para o carrinho:", itemParaCarrinho);
     
     onAddToCart(itemParaCarrinho);
-    
     onClose();
   };
 
@@ -47,7 +46,9 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
           </div>
 
           <div className="info-column">
-            <span className="category-tag">COLECIONÁVEIS</span>
+            <span className="category-tag">
+              {(product.category || product.categorias?.nome || 'PRODUTO').toUpperCase()}
+            </span>
             
             <h2 className="product-title">{product.title}</h2>
             
