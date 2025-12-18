@@ -4,17 +4,39 @@ import './ProductModal.css';
 const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [activeImage, setActiveImage] = useState(null);
+  const [localOptions, setLocalOptions] = useState([]);
 
   useEffect(() => {
     if (isOpen && product) {
       setQuantity(1);
-      setSelectedOption(
-        product.options && product.options.length > 0 ? product.options[0] : null
-      );
+      setActiveImage(product.image);
+
+      let rawOpts = product.options || product.opcoes || [];
+
+      let finalOptions = [];
+
+      if (Array.isArray(rawOpts)) {
+        finalOptions = rawOpts;
+      } 
+      else if (typeof rawOpts === 'string') {
+        try {
+          const cleanString = rawOpts.replace(/[{}"[\]]/g, ''); 
+          finalOptions = cleanString.split(',').map(s => s.trim()).filter(Boolean);
+        } catch (e) {
+          console.error("Erro ao processar opções:", e);
+          finalOptions = [];
+        }
+      }
+
+      setLocalOptions(finalOptions);
+      setSelectedOption(finalOptions.length > 0 ? finalOptions[0] : null);
     }
   }, [isOpen, product]);
 
   if (!isOpen || !product) return null;
+
+  const allImages = [...new Set([product.image, ...(product.gallery || [])])].filter(Boolean);
 
   const handleIncrease = () => setQuantity(prev => prev + 1);
   const handleDecrease = () => {
@@ -24,12 +46,11 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   const handleAddToCartClick = () => {
     const itemParaCarrinho = {
       ...product,
-      quantity: quantity,
-      selectedOption: selectedOption, 
-      totalPrice: product.price * quantity
+      quantity,
+      selectedOption, 
+      totalPrice: product.price * quantity,
+      image: activeImage || product.image 
     };
-
-    console.log("Enviando para o carrinho:", itemParaCarrinho);
     
     onAddToCart(itemParaCarrinho);
     onClose();
@@ -42,7 +63,26 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         
         <div className="modal-body">
           <div className="image-column">
-            <img src={product.image} alt={product.title} />
+            <div className="main-image-wrapper">
+               <img src={activeImage || product.image} alt={product.title} className="main-img" />
+            </div>
+
+            {allImages.length > 1 && (
+              <div className="thumbnails-row">
+                {allImages.map((img, index) => (
+                  <div 
+                    key={index} 
+                    className={`thumb-box ${activeImage === img ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveImage(img);
+                      if (localOptions[index]) setSelectedOption(localOptions[index]);
+                    }}
+                  >
+                    <img src={img} alt={`thumb-${index}`} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="info-column">
@@ -61,11 +101,11 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
               <p>{product.description || "Sem descrição disponível."}</p>
             </div>
 
-            {product.options && product.options.length > 0 && (
+            {localOptions.length > 0 && (
               <div className="options-selector">
                 <label>Escolha a opção:</label>
                 <div className="options-grid">
-                  {product.options.map((option) => (
+                  {localOptions.map((option) => (
                     <button
                       key={option}
                       className={`option-btn ${selectedOption === option ? 'active' : ''}`}

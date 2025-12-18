@@ -6,7 +6,7 @@ import comboImg from './assets/combo-gamer.png';
 import { CartProvider, useCart } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
 import ProductModal from './components/ProductModal';
-import { supabase } from './supabaseClient'; // Verifique se o nome do arquivo é supabase.js ou supabaseClient.js
+import { supabase } from './supabaseClient';
 import { CATEGORIES } from './data/db'; 
 import CategoryPage from './pages/CategoryPage';
 import { AllProductsPage } from './pages/AllProductsPage';
@@ -50,7 +50,7 @@ function ProductCard({ p, onSelect }) {
 
 function HomePage({ setSelectedProduct }) {
   const [products, setProducts] = useState([]);
-  const BUCKET_NAME = 'imagens-produtos'; // Confirme se é este o nome do seu bucket no Supabase
+  const BUCKET_NAME = 'imagens-produtos';
 
   useEffect(() => {
     fetchHomeData();
@@ -67,25 +67,29 @@ function HomePage({ setSelectedProduct }) {
 
       if (data) {
         const formattedData = data.map(item => {
-          let imageUrl = item.imagem_url; // Use o nome exato da coluna no banco
+          const getFullUrl = (imgName) => {
+            if (!imgName) return null;
+            if (imgName.startsWith('http')) return imgName;
+            const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(imgName);
+            return data.publicUrl;
+          };
 
-          if (imageUrl && !imageUrl.startsWith('http')) {
-             const { data: imageData } = supabase
-               .storage
-               .from(BUCKET_NAME)
-               .getPublicUrl(imageUrl);
-             imageUrl = imageData.publicUrl;
-          }
+          const mainImage = getFullUrl(item.imagem_url);
+          const rawGallery = [item.imagem_url_2, item.imagem_url_3];
+          const galleryProcessed = rawGallery
+             .map(img => getFullUrl(img))
+             .filter(link => link !== null);
 
           return {
             ...item,
-            image: imageUrl, // O Modal espera 'image'
-            imagem_url: imageUrl, // O ProductCard usa 'imagem_url'
-            title: item.nome, // O Modal espera 'title'
-            price: item.preco, // O Modal espera 'price'
-            description: item.descricao, // O Modal espera 'description'
-            category: item.categorias?.nome || 'Geral',
-            options: item.options || [] // Garante array para o Modal
+            image: mainImage, 
+            imagem_url: mainImage,
+            gallery: galleryProcessed,
+            options: item.options || item.opcoes || [],
+            title: item.nome, 
+            price: item.preco, 
+            description: item.descricao,
+            category: item.categorias?.nome || 'Geral'
           };
         });
         
@@ -211,8 +215,8 @@ function StoreContent() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const handleAddToCart = (item) => {
-    addToCart(item); // Chama a função global do carrinho
-    setSelectedProduct(null); // Fecha o modal
+    addToCart(item);
+    setSelectedProduct(null);
   };
 
   return (
@@ -304,10 +308,10 @@ function StoreContent() {
         
         {selectedProduct && (
           <ProductModal 
-            isOpen={!!selectedProduct} // Passa true se tiver produto selecionado
+            isOpen={!!selectedProduct} 
             product={selectedProduct} 
             onClose={() => setSelectedProduct(null)}
-            onAddToCart={handleAddToCart} // ESSA É A PEÇA QUE FALTAVA
+            onAddToCart={handleAddToCart} 
           />
         )}
       </div>

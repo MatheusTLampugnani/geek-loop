@@ -90,3 +90,10 @@
   .modal-body { flex-direction: column; max-height: 90vh; overflow-y: auto; }
   .image-column, .info-column { width: 100%; }
 }
+
+.image-column { display: flex; flex-direction: column; gap: 15px; }
+.main-img { max-height: 350px; width: 100%; object-fit: contain; border-radius: 8px; }
+.thumbnails-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.thumb-box { width: 60px; height: 60px; border: 2px solid #333; border-radius: 6px; cursor: pointer; opacity: 0.6; transition: 0.2s; }
+.thumb-box:hover, .thumb-box.active { opacity: 1; border-color: #ffd700; transform: scale(1.05); }
+.thumb-box img { width: 100%; height: 100%; object-fit: cover; }

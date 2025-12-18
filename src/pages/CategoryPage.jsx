@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import ProductModal from '../components/ProductModal';
+import { useCart } from '../context/CartContext';
 import './CategoryPage.css';
 
 const CategoryPage = () => {
   const { id } = useParams();
+  const { addToCart } = useCart();
+  
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [categoryName, setCategoryName] = useState('Destaques');
+
   const BUCKET_NAME = 'imagens-produtos'; 
 
   useEffect(() => {
@@ -23,9 +27,8 @@ const CategoryPage = () => {
       let query = supabase
         .from('produtos')
         .select(`*, categorias ( nome )`);
-
       if (id) {
-        query = query.eq('categoria_id', id);
+        query = query.eq('id_categoria', id); 
       }
 
       const { data, error } = await query;
@@ -39,24 +42,30 @@ const CategoryPage = () => {
       }
 
       const formattedData = data.map(item => {
-        let imageUrl = item.imagem_url;
-        
-        if (imageUrl && !imageUrl.startsWith('http')) {
-          const { data: imageData } = supabase
-            .storage
-            .from(BUCKET_NAME)
-            .getPublicUrl(imageUrl);
-          imageUrl = imageData.publicUrl;
-        }
+        const getFullUrl = (imgName) => {
+          if (!imgName) return null;
+          if (imgName.startsWith('http')) return imgName;
+          const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(imgName);
+          return data.publicUrl;
+        };
+
+        const mainImage = getFullUrl(item.imagem_url);
+
+        const rawGallery = [item.imagem_url_2, item.imagem_url_3]; 
+        const galleryProcessed = rawGallery
+          .map(img => getFullUrl(img))
+          .filter(link => link !== null);
 
         return {
           ...item,
           id: item.id,
           title: item.nome,
           price: item.preco,
-          description: item.descricao, 
-          image: imageUrl,
-          options: item.options || [] 
+          description: item.descricao,
+          image: mainImage,
+          gallery: galleryProcessed,
+          options: item.options || item.opcoes || [], 
+          category: item.categorias?.nome || 'Geral'
         };
       });
 
@@ -74,22 +83,7 @@ const CategoryPage = () => {
   };
 
   const handleAddToCart = (item) => {
-    const savedCart = JSON.parse(localStorage.getItem('geek_cart')) || [];
-    
-    const existingIndex = savedCart.findIndex(i => i.id === item.id);
-    let newCart;
-    
-    if (existingIndex > -1) {
-      newCart = [...savedCart];
-      newCart[existingIndex].quantity += item.quantity;
-    } else {
-      newCart = [...savedCart, item];
-    }
-    
-    localStorage.setItem('geek_cart', JSON.stringify(newCart));
-    alert(`Produto adicionado ao carrinho!`);
-    
-    window.dispatchEvent(new Event("storage")); 
+    addToCart(item);
   };
 
   if (loading) return <div style={{color: 'white', padding: 40, textAlign: 'center'}}>Carregando...</div>;
