@@ -94,7 +94,6 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
             
             <div className="product-price">
               R$ {Number(product.price).toFixed(2)}
-              <span className="installment-info">em até 10x sem juros</span>
             </div>
 
             <div className="product-description">

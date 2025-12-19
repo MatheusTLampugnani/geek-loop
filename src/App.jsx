@@ -38,8 +38,14 @@ function ProductCard({ p, onSelect }) {
         <h6 className="fw-bold text-white mb-1 text-truncate" style={{fontSize: '0.95rem'}}>{p.nome}</h6>
         <div className="mt-auto pt-2 d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25">
           <div>
-            <div className="fw-bold text-white" style={{fontSize: '1rem'}}>R$ {p.preco.toFixed(2)}</div>
-            <div className="text-muted" style={{fontSize: '0.65rem'}}>10x s/ juros</div>
+            <div className="fw-bold text-white" style={{fontSize: '1rem'}}>
+              {p.oldPrice > 0 && p.oldPrice > p.price && (
+                <span style={{textDecoration: 'line-through', color: '#666', fontSize: '0.8rem', marginRight: '5px'}}>
+                   R$ {Number(p.oldPrice).toFixed(2)}
+                </span>
+              )}
+              R$ {p.preco.toFixed(2)}
+            </div>
           </div>
           <button className="btn-quick-add"><PlusIcon /></button>
         </div>
@@ -61,7 +67,7 @@ function HomePage({ setSelectedProduct }) {
       const { data, error } = await supabase
         .from('produtos')
         .select(`*, categorias ( nome )`)
-        .limit(10);
+        .limit(50); 
 
       if (error) throw error;
 
@@ -75,7 +81,7 @@ function HomePage({ setSelectedProduct }) {
           };
 
           const mainImage = getFullUrl(item.imagem_url);
-          const rawGallery = [item.imagem_url_2, item.imagem_url_3];
+          const rawGallery = [item.imagem_2, item.imagem_3];
           const galleryProcessed = rawGallery
              .map(img => getFullUrl(img))
              .filter(link => link !== null);
@@ -89,7 +95,10 @@ function HomePage({ setSelectedProduct }) {
             title: item.nome, 
             price: item.preco, 
             description: item.descricao,
-            category: item.categorias?.nome || 'Geral'
+            category: item.categorias?.nome || 'Geral',
+            isFeatured: item.destaque, 
+            oldPrice: item.preco_antigo,
+            badge: item.badge 
           };
         });
         
@@ -100,8 +109,13 @@ function HomePage({ setSelectedProduct }) {
     }
   }
 
-  const destaques = products.slice(0, 4);
-  const ofertas = products.slice(4, 8);
+  const destaques = products
+    .filter(p => p.isFeatured === true)
+    .slice(0, 4); 
+
+  const ofertas = products
+    .filter(p => p.oldPrice && p.oldPrice > 0)
+    .slice(0, 4);
 
   return (
     <>
@@ -154,7 +168,9 @@ function HomePage({ setSelectedProduct }) {
               </div>
             ))
           ) : (
-            <div className="text-white text-center w-100 py-4">Carregando destaques...</div>
+            <div className="text-white text-center w-100 py-4" style={{opacity: 0.5}}>
+               Nenhum destaque.
+            </div>
           )}
         </div>
       </section>
@@ -175,7 +191,9 @@ function HomePage({ setSelectedProduct }) {
                </div>
              ))
           ) : (
-             <div className="text-white text-center w-100 py-4 opacity-50 small">Carregando ofertas...</div>
+             <div className="text-white text-center w-100 py-4 opacity-50 small">
+               Nenhuma oferta encontrada.
+             </div>
           )}
         </div>
       </section>
@@ -310,7 +328,7 @@ function StoreContent() {
           <ProductModal 
             isOpen={!!selectedProduct} 
             product={selectedProduct} 
-            onClose={() => setSelectedProduct(null)}
+            onClose={() => ssetSelectedProduct(null)}
             onAddToCart={handleAddToCart} 
           />
         )}
