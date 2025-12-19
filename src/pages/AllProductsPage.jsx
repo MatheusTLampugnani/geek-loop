@@ -1,91 +1,119 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import ProductModal from '../components/ProductModal';
+import { useCart } from '../context/CartContext';
+import './CategoryPage.css';
 
-const PlusIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
-
-function ProductImage({ src, gradient, alt }) {
-  if (src) return <img src={src} alt={alt} className="card-img-hover" style={{width: '100%', height: '100%', objectFit: 'cover'}} />;
-  return <div className="card-img-hover" style={{ background: gradient || '#333', width: '100%', height: '100%' }}></div>;
-}
-
-export function AllProductsPage() {
-  const [selectedProduct, setSelectedProduct] = useState(null);
+export const AllProductsPage = () => {
+  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const BUCKET_NAME = 'imagens-produtos'; 
 
   useEffect(() => {
-    fetchProducts();
+    fetchAllProducts();
   }, []);
 
-async function fetchProducts() {
+  const fetchAllProducts = async () => {
     try {
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('produtos')
-        .select(`
-          *,
-          categorias ( nome )
-        `);
+        .select(`*, categorias ( nome )`);
 
       if (error) throw error;
 
-      if (data) {
-        const formattedData = data.map(item => ({
+      const formattedData = data.map(item => {
+        const getFullUrl = (imgName) => {
+          if (!imgName) return null;
+          if (imgName.startsWith('http')) return imgName;
+          const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(imgName);
+          return data.publicUrl;
+        };
+
+        const mainImage = getFullUrl(item.imagem_url);
+        
+        const rawGallery = [item.imagem_url_2, item.imagem_url_3];
+        const galleryProcessed = rawGallery
+          .map(img => getFullUrl(img))
+          .filter(link => link !== null);
+
+        return {
           ...item,
-          nome: item.nome,
-          preco: item.preco,
+          id: item.id,
+          title: item.nome,
+          price: item.preco,
+          description: item.descricao,
+          image: mainImage,
+          gallery: galleryProcessed,
+          options: item.options || item.opcoes || [], 
           category: item.categorias?.nome || 'Geral'
-        }));
-        setProducts(formattedData);
-      }
+        };
+      });
+
+      setProducts(formattedData);
+
     } catch (error) {
-      console.error("Erro:", error.message);
+      console.error("Erro ao carregar catálogo:", error.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  const handleAddToCart = (item) => {
+    addToCart(item);
+  };
+
+  if (loading) return <div style={{color: 'white', padding: 40, textAlign: 'center'}}>Carregando catálogo...</div>;
 
   return (
-    <div className="container" style={{ paddingTop: '100px', paddingBottom: '80px' }}>
-      <div className="d-flex align-items-center gap-3 mb-5">
-        <Link to="/" className="btn btn-sm btn-outline-light rounded-circle p-2" style={{width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>←</Link>
-        <div>
-           <h2 className="fw-bold text-white mb-0">Catálogo Completo</h2>
-           <p className="text-secondary small m-0">{loading ? 'Carregando...' : `${products.length} produtos disponíveis`}</p>
-        </div>
+    <div className="category-page">
+      <div style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px'}}>
+         <button 
+           onClick={() => window.history.back()} 
+           style={{background: 'none', border: '1px solid #333', color: 'white', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer'}}
+         >
+           ←
+         </button>
+         <div>
+            <h1 style={{margin: 0}}>Catálogo Completo</h1>
+            <span style={{color: '#888', fontSize: '0.9rem'}}>{products.length} produtos disponíveis</span>
+         </div>
       </div>
-
-      {loading ? (
-        <div className="text-center text-white py-5"><div className="spinner-border text-warning" role="status"></div></div>
-      ) : (
-        <div className="row g-2 g-md-4">
-          {products.map(p => (
-            <div key={p.id} className="col-6 col-md-4 col-lg-3">
-              <div className="card-geek h-100 cursor-pointer" onClick={() => setSelectedProduct(p)}>
-                <div className="card-img-wrapper position-relative">
-                  {p.badge && <span className="product-tag">{p.badge}</span>}
-                  <ProductImage src={p.imagem_url} alt={p.nome} />
-                </div>
-                <div className="p-3 d-flex flex-column flex-grow-1">
-                  <span className="badge-category align-self-start mb-1" style={{fontSize: '0.6rem'}}>{p.category}</span>
-                  <h6 className="fw-bold text-white mb-1 text-truncate" style={{fontSize: '0.95rem'}}>{p.nome}</h6>
-                  <div className="mt-auto pt-2 d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25">
-                    <div>
-                      <div className="fw-bold text-white" style={{fontSize: '1rem'}}>R$ {p.preco.toFixed(2)}</div>
-                      <div className="text-muted" style={{fontSize: '0.65rem'}}>10x s/ juros</div>
-                    </div>
-                    <button className="btn-quick-add"><PlusIcon /></button>
-                  </div>
-                </div>
+      
+      <div className="products-grid">
+        {products.map((product) => (
+          <div 
+            key={product.id} 
+            className="product-card"
+            onClick={() => setSelectedProduct(product)}
+          >
+            <div className="card-image">
+              <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} />
+            </div>
+            <div className="card-info">
+              <span className="tag">{product.category}</span>
+              <h3>{product.title}</h3>
+              <div className="card-footer">
+                <span className="price">R$ {Number(product.price).toFixed(2)}</span>
+                <button className="btn-plus">+</button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
 
-      {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+      {selectedProduct && (
+        <ProductModal 
+          isOpen={!!selectedProduct} 
+          onClose={() => setSelectedProduct(null)}
+          product={selectedProduct}
+          onAddToCart={handleAddToCart}
+        />
+      )}
     </div>
   );
-}
+};
