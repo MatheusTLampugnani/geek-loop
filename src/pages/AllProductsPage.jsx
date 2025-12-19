@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import ProductModal from '../components/ProductModal';
 import { useCart } from '../context/CartContext';
-import './CategoryPage.css';
+import './CategoryPage.css'; 
 
-export const AllProductsPage = () => {
+export const AllProductsPage = ({ filterType }) => {
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,15 +14,24 @@ export const AllProductsPage = () => {
 
   useEffect(() => {
     fetchAllProducts();
-  }, []);
+  }, [filterType]);
 
   const fetchAllProducts = async () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('produtos')
-        .select(`*, categorias ( nome )`);
+        .select(`*, categorias ( nome )`)
+        .eq('ativo', true);
+
+      if (filterType === 'destaques') {
+        query = query.eq('destaque', true);
+      } else if (filterType === 'promo') {
+        query = query.eq('em_oferta', true);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -46,11 +55,13 @@ export const AllProductsPage = () => {
           id: item.id,
           title: item.nome,
           price: item.preco,
+          oldPrice: item.preco_antigo,
           description: item.descricao,
           image: mainImage,
           gallery: galleryProcessed,
-          options: item.options || item.opcoes || [], 
-          category: item.categorias?.nome || 'Geral'
+          options: item.opcoes || [], 
+          category: item.categorias?.nome || 'Geral',
+          badge: item.badge
         };
       });
 
@@ -65,9 +76,14 @@ export const AllProductsPage = () => {
 
   const handleAddToCart = (item) => {
     addToCart(item);
+    setSelectedProduct(null);
   };
 
-  if (loading) return <div style={{color: 'white', padding: 40, textAlign: 'center'}}>Carregando catálogo...</div>;
+  let pageTitle = "Catálogo Completo";
+  if (filterType === 'destaques') pageTitle = "Produtos em Destaque";
+  if (filterType === 'promo') pageTitle = "Ofertas Imperdíveis";
+
+  if (loading) return <div style={{color: 'white', padding: 40, textAlign: 'center'}}>Carregando produtos...</div>;
 
   return (
     <div className="category-page">
@@ -79,8 +95,10 @@ export const AllProductsPage = () => {
            ←
          </button>
          <div>
-            <h1 style={{margin: 0}}>Catálogo Completo</h1>
-            <span style={{color: '#888', fontSize: '0.9rem'}}>{products.length} produtos disponíveis</span>
+            <h1 style={{margin: 0, color: filterType === 'promo' ? '#ff4d4d' : filterType === 'destaques' ? 'var(--neon-primary)' : 'white'}}>
+                {pageTitle}
+            </h1>
+            <span style={{color: '#888', fontSize: '0.9rem'}}>{products.length} produtos encontrados</span>
          </div>
       </div>
       
@@ -92,13 +110,21 @@ export const AllProductsPage = () => {
             onClick={() => setSelectedProduct(product)}
           >
             <div className="card-image">
+              {product.badge && <span className="tag" style={{top: 10, left: 10, background: 'var(--neon-primary)', color:'black'}}>{product.badge}</span>}
               <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} />
             </div>
             <div className="card-info">
               <span className="tag">{product.category}</span>
               <h3>{product.title}</h3>
               <div className="card-footer">
-                <span className="price">R$ {Number(product.price).toFixed(2)}</span>
+                <div style={{display:'flex', flexDirection:'column'}}>
+                    {product.oldPrice > 0 && (
+                        <span style={{textDecoration: 'line-through', color: '#666', fontSize: '0.8rem'}}>
+                            R$ {Number(product.oldPrice).toFixed(2)}
+                        </span>
+                    )}
+                    <span className="price">R$ {Number(product.price).toFixed(2)}</span>
+                </div>
                 <button className="btn-plus">+</button>
               </div>
             </div>

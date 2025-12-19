@@ -8,6 +8,7 @@ import { CartDrawer } from './components/CartDrawer';
 import ProductModal from './components/ProductModal';
 import { supabase } from './supabaseClient';
 import { CATEGORIES } from './data/db'; 
+
 import CategoryPage from './pages/CategoryPage';
 import { AllProductsPage } from './pages/AllProductsPage';
 import LoginPage from './pages/LoginPage';
@@ -48,6 +49,7 @@ function ProductCard({ p, onSelect }) {
               )}
               R$ {p.preco.toFixed(2)}
             </div>
+            <div className="text-muted" style={{fontSize: '0.65rem'}}>10x s/ juros</div>
           </div>
           <button className="btn-quick-add"><PlusIcon /></button>
         </div>
@@ -69,6 +71,7 @@ function HomePage({ setSelectedProduct }) {
       const { data, error } = await supabase
         .from('produtos')
         .select(`*, categorias ( nome )`)
+        .eq('ativo', true)
         .limit(50); 
 
       if (error) throw error;
@@ -93,7 +96,7 @@ function HomePage({ setSelectedProduct }) {
             image: mainImage, 
             imagem_url: mainImage,
             gallery: galleryProcessed,
-            options: item.options || item.opcoes || [],
+            options: item.opcoes || [],
             title: item.nome, 
             price: item.preco, 
             description: item.descricao,
@@ -111,13 +114,8 @@ function HomePage({ setSelectedProduct }) {
     }
   }
 
-  const destaques = products
-    .filter(p => p.isFeatured === true)
-    .slice(0, 4); 
-
-  const ofertas = products
-    .filter(p => p.oldPrice && p.oldPrice > 0)
-    .slice(0, 4);
+  const destaques = products.filter(p => p.isFeatured === true).slice(0, 4); 
+  const ofertas = products.filter(p => p.oldPrice && p.oldPrice > 0).slice(0, 4);
 
   return (
     <>
@@ -160,7 +158,7 @@ function HomePage({ setSelectedProduct }) {
       <section id="products" className="mb-5">
         <div className="d-flex justify-content-between align-items-center mb-3 px-1">
           <h5 className="fw-bold text-white mb-0">Destaques</h5>
-          <Link to="/todos-produtos" style={{ color: 'var(--neon-primary)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver tudo →</Link>
+          <Link to="/destaques" style={{ color: 'var(--neon-primary)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver tudo →</Link>
         </div>
         <div className="row g-2 g-md-4">
           {destaques.length > 0 ? (
@@ -171,7 +169,7 @@ function HomePage({ setSelectedProduct }) {
             ))
           ) : (
             <div className="text-white text-center w-100 py-4" style={{opacity: 0.5}}>
-               Nenhum destaque.
+               Nenhum destaque configurado no banco.
             </div>
           )}
         </div>
@@ -183,7 +181,7 @@ function HomePage({ setSelectedProduct }) {
              <h5 className="fw-bold text-white mb-0" style={{color: '#ff4d4d'}}>Ofertas da Semana</h5>
              <div className="section-title-line" style={{background: 'linear-gradient(90deg, #ff4d4d, transparent)'}}></div>
           </div>
-          <Link to="/todos-produtos" style={{ color: '#ff4d4d', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver todas →</Link>
+          <Link to="/ofertas" style={{ color: '#ff4d4d', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 'bold' }}>Ver todas →</Link>
         </div>
         <div className="row g-2 g-md-4">
           {ofertas.length > 0 ? (
@@ -269,7 +267,6 @@ function StoreContent() {
               <span style={{ fontSize: '0.9rem' }}>{totalItems}</span>
             </button>
           </div>
-
           <div className="container d-md-none mt-2 w-100">
              <div className="mobile-nav-scroll">
                 <a href="/#home" className="mobile-nav-link">Início</a>
@@ -284,6 +281,8 @@ function StoreContent() {
            <Routes>
               <Route path="/" element={<HomePage setSelectedProduct={setSelectedProduct} />} />
               <Route path="/todos-produtos" element={<AllProductsPage />} />
+              <Route path="/destaques" element={<AllProductsPage filterType="destaques" />} />
+              <Route path="/ofertas" element={<AllProductsPage filterType="promo" />} />
               <Route path="/categoria/:id" element={<CategoryPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin" element={<AdminPage />} />
@@ -321,7 +320,11 @@ function StoreContent() {
               </div>
             </div>
             <div className="text-center small mt-5 pt-4 border-top" style={{borderColor: 'rgba(255,255,255,0.1)'}}>
-              <p className="m-0 opacity-75">© 2025 Geek Loop Store. Todos os direitos reservados.</p>
+              <p className="m-0 opacity-75">
+                © 2025 Geek Loop Store. Todos os direitos reservados.
+                <span style={{margin: '0 10px'}}>|</span>
+                <Link to="/login" style={{color: '#333', textDecoration: 'none', fontSize: '0.8rem'}}>Admin</Link>
+              </p>
             </div>
           </div>
         </footer>
