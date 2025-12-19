@@ -1,0 +1,150 @@
+/* src/pages/AdminPage.css */
+
+/* Fundo da página Admin */
+.admin-container {
+  padding: 20px;
+  background-color: #000;
+  min-height: 100vh;
+  color: #fff;
+}
+
+/* Tabela de Produtos */
+.admin-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-table th {
+  background: #111;
+  padding: 15px;
+  text-align: left;
+  color: var(--neon-primary); /* Amarelo do tema */
+  border-bottom: 1px solid #333;
+}
+
+.admin-table td {
+  padding: 15px;
+  border-bottom: 1px solid #222;
+  vertical-align: middle;
+}
+
+.status-active { color: #00ff88; font-weight: bold; background: rgba(0, 255, 136, 0.1); padding: 4px 8px; border-radius: 4px; }
+.status-inactive { color: #ff4d4d; font-weight: bold; background: rgba(255, 77, 77, 0.1); padding: 4px 8px; border-radius: 4px; }
+
+/* --- MODAL E FORMULÁRIO (A Correção Principal) --- */
+
+.admin-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85); /* Fundo bem escuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px); /* Efeito de desfoque no fundo */
+}
+
+.admin-modal-container {
+  background: #161616; /* Cinza quase preto */
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 650px; /* Largura boa para o form */
+  border: 1px solid #333;
+  box-shadow: 0 0 30px rgba(0,0,0,0.7);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto; /* Permite rolar se a tela for pequena */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 15px;
+}
+
+.modal-header h2 { margin: 0; color: #fff; }
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.close-modal-btn:hover { color: #ff4d4d; }
+
+/* Estilo dos Inputs */
+.form-group { margin-bottom: 15px; }
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #aaa;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  background: #252525; /* Cinza para destacar do fundo preto */
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.2s;
+}
+
+.form-input:focus {
+  border-color: var(--neon-primary);
+  background: #333;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.checkbox-group {
+  display: flex;
+  gap: 20px;
+  background: #222;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.checkbox-label input { width: 18px; height: 18px; accent-color: var(--neon-primary); }
+
+/* Botões de Ação na Tabela */
+.action-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-left: 5px;
+}
+.btn-edit { background: #007bff; color: white; }
+.btn-toggle { transition: 0.3s; }

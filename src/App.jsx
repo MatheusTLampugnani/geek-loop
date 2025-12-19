@@ -10,6 +10,8 @@ import { supabase } from './supabaseClient';
 import { CATEGORIES } from './data/db'; 
 import CategoryPage from './pages/CategoryPage';
 import { AllProductsPage } from './pages/AllProductsPage';
+import LoginPage from './pages/LoginPage';
+import AdminPage from './pages/AdminPage';
 
 const PlusIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
 const CartIcon = () => (<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>);
@@ -81,7 +83,7 @@ function HomePage({ setSelectedProduct }) {
           };
 
           const mainImage = getFullUrl(item.imagem_url);
-          const rawGallery = [item.imagem_2, item.imagem_3];
+          const rawGallery = [item.imagem_url_2, item.imagem_url_3];
           const galleryProcessed = rawGallery
              .map(img => getFullUrl(img))
              .filter(link => link !== null);
@@ -283,6 +285,8 @@ function StoreContent() {
               <Route path="/" element={<HomePage setSelectedProduct={setSelectedProduct} />} />
               <Route path="/todos-produtos" element={<AllProductsPage />} />
               <Route path="/categoria/:id" element={<CategoryPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/admin" element={<AdminPage />} />
            </Routes>
         </div>
 
@@ -328,7 +332,7 @@ function StoreContent() {
           <ProductModal 
             isOpen={!!selectedProduct} 
             product={selectedProduct} 
-            onClose={() => ssetSelectedProduct(null)}
+            onClose={() => setSelectedProduct(null)}
             onAddToCart={handleAddToCart} 
           />
         )}
