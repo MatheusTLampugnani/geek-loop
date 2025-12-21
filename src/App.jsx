@@ -125,7 +125,7 @@ function HomePage({ setSelectedProduct }) {
             <span className="badge-category mb-2">⚡ ENTREGA RÁPIDA</span>
             <h2 className="fw-bold text-white my-2">Onde o mundo geek nunca para!</h2>
             <h2 className="text-secondary small mb-3">Tecnologia e cultura em um só lugar.</h2>
-            <button className="btn-neon px-4 py-2" onClick={() => document.getElementById('products').scrollIntoView({behavior: 'smooth'})}>VER CATÁLOGO</button>
+            <Link to="/todos-produtos" className="btn-neon px-4 py-2 text-decoration-none">VER CATÁLOGO</Link>
          </div>
       </section>
 

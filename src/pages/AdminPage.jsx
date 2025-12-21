@@ -47,9 +47,9 @@ const AdminPage = () => {
       .order('nome', { ascending: true });
     
     if (catError) {
-      console.error("Erro categorias:", catError);
+        console.error("Erro categorias:", catError);
     } else {
-      console.log("Categorias carregadas:", catData);
+        console.log("Categorias carregadas:", catData); 
     }
     setCategories(catData || []);
 
@@ -72,7 +72,8 @@ const AdminPage = () => {
         em_oferta: product.em_oferta || false,
         ativo: product.ativo !== false,
         badge: product.badge || '',
-        id_categoria: product.id_categoria || '',
+        id_categoria: product.id_categoria ? String(product.id_categoria) : "", 
+        
         options: (product.opcoes || []).join(', ') 
       });
     } else {
@@ -92,16 +93,17 @@ const AdminPage = () => {
     setErrorMessage('');
     
     try {
-      const catId = formData.id_categoria && formData.id_categoria !== "" 
-                    ? parseInt(formData.id_categoria) 
-                    : null;
+      let catId = null;
+      if (formData.id_categoria && formData.id_categoria !== "") {
+         catId = parseInt(formData.id_categoria);
+      }
 
       const payload = {
         nome: formData.nome,
         descricao: formData.descricao,
         preco: parseFloat(formData.preco),
         preco_antigo: formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
-        id_categoria: catId,
+        id_categoria: catId, 
         imagem_url: formData.imagem_url,
         imagem_url_2: formData.imagem_url_2,
         imagem_url_3: formData.imagem_url_3,
@@ -112,7 +114,7 @@ const AdminPage = () => {
         opcoes: formData.options.split(',').map(s => s.trim()).filter(Boolean)
       };
 
-      console.log("Enviando para o banco:", payload);
+      console.log("Enviando Payload:", payload);
 
       let error;
       if (editingProduct) {
@@ -133,7 +135,7 @@ const AdminPage = () => {
       setIsModalOpen(false);
       fetchData(); 
     } catch (error) {
-      console.error("Erro completo:", error);
+      console.error("Erro ao salvar:", error);
       setErrorMessage(error.message || "Erro desconhecido ao salvar.");
     }
   };
@@ -228,12 +230,12 @@ const AdminPage = () => {
                   <select 
                     required 
                     className="form-input" 
-                    value={formData.id_categoria || ""} 
+                    value={formData.id_categoria} 
                     onChange={e => setFormData({...formData, id_categoria: e.target.value})}
                   >
                     <option value="">Selecione...</option>
-                    {categories.map(cat => (
-                        <option key={cat.id || Math.random()} value={cat.id}>
+                    {categories.map((cat, index) => (
+                      <option key={cat.id_categoria || index} value={cat.id_categoria}>
                         {cat.nome}
                       </option>
                     ))}

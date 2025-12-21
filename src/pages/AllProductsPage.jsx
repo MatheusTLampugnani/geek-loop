@@ -9,6 +9,7 @@ export const AllProductsPage = ({ filterType }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [sortOrder, setSortOrder] = useState('default');
 
   const BUCKET_NAME = 'imagens-produtos'; 
 
@@ -44,7 +45,6 @@ export const AllProductsPage = ({ filterType }) => {
         };
 
         const mainImage = getFullUrl(item.imagem_url);
-        
         const rawGallery = [item.imagem_url_2, item.imagem_url_3];
         const galleryProcessed = rawGallery
           .map(img => getFullUrl(img))
@@ -79,6 +79,18 @@ export const AllProductsPage = ({ filterType }) => {
     setSelectedProduct(null);
   };
 
+  const getSortedProducts = () => {
+    const list = [...products];
+    if (sortOrder === 'asc') {
+      return list.sort((a, b) => a.price - b.price);
+    } else if (sortOrder === 'desc') {
+      return list.sort((a, b) => b.price - a.price);
+    }
+    return list;
+  };
+
+  const displayedProducts = getSortedProducts();
+
   let pageTitle = "Catálogo Completo";
   if (filterType === 'destaques') pageTitle = "Produtos em Destaque";
   if (filterType === 'promo') pageTitle = "Ofertas Imperdíveis";
@@ -87,23 +99,45 @@ export const AllProductsPage = ({ filterType }) => {
 
   return (
     <div className="category-page">
-      <div style={{display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px'}}>
-         <button 
-           onClick={() => window.history.back()} 
-           style={{background: 'none', border: '1px solid #333', color: 'white', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer'}}
-         >
-           ←
-         </button>
-         <div>
-            <h1 style={{margin: 0, color: filterType === 'promo' ? '#ff4d4d' : filterType === 'destaques' ? 'var(--neon-primary)' : 'white'}}>
-                {pageTitle}
-            </h1>
-            <span style={{color: '#888', fontSize: '0.9rem'}}>{products.length} produtos encontrados</span>
+      <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '30px'}}>
+         <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+            <button 
+              onClick={() => window.history.back()} 
+              style={{background: 'none', border: '1px solid #333', color: 'white', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer'}}
+            >
+              ←
+            </button>
+            <div>
+                <h1 style={{margin: 0, color: filterType === 'promo' ? '#ff4d4d' : filterType === 'destaques' ? 'var(--neon-primary)' : 'white'}}>
+                    {pageTitle}
+                </h1>
+                <span style={{color: '#888', fontSize: '0.9rem'}}>{products.length} produtos encontrados</span>
+            </div>
+         </div>
+
+         <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+            <select 
+              value={sortOrder} 
+              onChange={(e) => setSortOrder(e.target.value)}
+              style={{
+                background: '#111', 
+                color: 'white', 
+                border: '1px solid #333', 
+                padding: '10px 15px', 
+                borderRadius: '8px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="default">Ordenar por: Padrão</option>
+              <option value="asc">Menor Preço 🡡</option>
+              <option value="desc">Maior Preço 🡣</option>
+            </select>
          </div>
       </div>
       
       <div className="products-grid">
-        {products.map((product) => (
+        {displayedProducts.map((product) => (
           <div 
             key={product.id} 
             className="product-card"
