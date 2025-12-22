@@ -49,7 +49,6 @@ function ProductCard({ p, onSelect }) {
               )}
               R$ {p.preco.toFixed(2)}
             </div>
-            <div className="text-muted" style={{fontSize: '0.65rem'}}>10x s/ juros</div>
           </div>
           <button className="btn-quick-add"><PlusIcon /></button>
         </div>
