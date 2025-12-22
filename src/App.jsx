@@ -8,7 +8,7 @@ import { CartDrawer } from './components/CartDrawer';
 import ProductModal from './components/ProductModal';
 import { supabase } from './supabaseClient';
 import { CATEGORIES } from './data/db'; 
-
+import { ComboBuilderPage } from './pages/ComboPage';
 import CategoryPage from './pages/CategoryPage';
 import { AllProductsPage } from './pages/AllProductsPage';
 import LoginPage from './pages/LoginPage';
@@ -202,18 +202,39 @@ function HomePage({ setSelectedProduct }) {
         <div className="promo-card rounded-4 overflow-hidden position-relative">
           <div className="row g-0">
             <div className="col-lg-6 p-4 p-md-5 position-relative z-1 d-flex flex-column justify-content-center text-center text-lg-start">
-              <span className="promo-tag">OFERTA RELÂMPAGO</span>
-              <h2 className="promo-title">Combo Gamer<br />Supreme</h2>
-              <p className="text-secondary mb-4 small">Teclado Mecânico + Mouse + Headset. O kit definitivo para sua vitória.</p>
-              <div className="d-flex align-items-baseline justify-content-center justify-content-lg-start gap-3 mb-4">
-                <span className="promo-price-new">R$ 599,90</span>
-                <span className="promo-price-old">R$ 899,90</span>
+              <h2 className="promo-title" style={{fontSize: '2.5rem', lineHeight: '1.1'}}>
+                Monte seu Combo <br />
+                <span style={{color: 'var(--neon-primary)'}}>Personalizado</span>
+              </h2>
+              
+              <p className="text-secondary mb-4 mt-3" style={{fontSize: '1.1rem'}}>
+                Escolha seu Teclado, Mouse e Headset favoritos e ganhe desconto automático no pacote completo.
+              </p>
+              
+              <div className="d-flex align-items-center justify-content-center justify-content-lg-start gap-3 mb-4">
+                <div style={{background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--neon-primary)'}}>
+                   <span style={{color: 'white', fontWeight: 'bold', fontSize: '1.2rem'}}>10% OFF</span>
+                   <span style={{color: '#aaa', fontSize: '0.9rem', marginLeft: '8px'}}>no Kit Completo</span>
+                </div>
               </div>
-              <div><button className="btn-promo">GARANTIR AGORA</button></div>
+
+              <div>
+                <Link to="/monte-seu-combo">
+                   <button className="btn-promo" style={{width: 'auto', padding: '15px 40px'}}>
+                     MONTAR MEU KIT AGORA 🛠️
+                   </button>
+                </Link>
+              </div>
             </div>
-            <div className="col-lg-6 d-flex align-items-center justify-content-center position-relative py-4" style={{minHeight: '250px'}}>
-               <div className="position-absolute rounded-circle" style={{width: '200px', height: '200px', background: 'var(--neon-primary)', filter: 'blur(90px)', opacity: 0.2}}></div>
-               <img src={comboImg} alt="Combo Gamer" className="img-fluid position-relative z-1 rounded-3 shadow-lg" style={{maxWidth: '80%', transform: 'rotate(-5deg)', border: '1px solid rgba(255,255,255,0.1)'}} />
+
+            <div className="col-lg-6 d-flex align-items-center justify-content-center position-relative py-4" style={{minHeight: '300px'}}>
+               <div className="position-absolute rounded-circle" style={{width: '250px', height: '250px', background: 'var(--neon-primary)', filter: 'blur(100px)', opacity: 0.15}}></div>
+               <img 
+                 src={comboImg} 
+                 alt="Exemplo de Combo" 
+                 className="img-fluid position-relative z-1" 
+                 style={{maxWidth: '85%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'}} 
+               />
             </div>
           </div>
         </div>
@@ -286,6 +307,7 @@ function StoreContent() {
               <Route path="/categoria/:id" element={<CategoryPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/monte-seu-combo" element={<ComboBuilderPage />} />
            </Routes>
         </div>
 
