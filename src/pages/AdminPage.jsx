@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
+// Componente simples para visualizar a imagem carregada
 const ImagePreview = ({ url, label }) => {
   if (!url) return null;
   return (
@@ -17,7 +18,11 @@ export default function AdminPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  // Estado para controlar o Modal
   const [showModal, setShowModal] = useState(false);
+
+  // Estado do formulário
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -113,7 +118,7 @@ export default function AdminPage() {
       alert('Erro ao salvar: ' + error.message);
     } else {
       alert('Produto salvo com sucesso!');
-      closeModal();
+      closeModal(); 
       fetchProducts();
     }
   };
@@ -133,7 +138,7 @@ export default function AdminPage() {
       ativo: product.ativo,
       badge: product.badge || ''
     });
-    setShowModal(true);
+    setShowModal(true); 
   };
 
   const handleDelete = async (id) => {
@@ -159,6 +164,7 @@ export default function AdminPage() {
 
   return (
     <div className="container py-5 mt-5 text-white">
+      {/* CABEÇALHO */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h2>Painel Administrativo</h2>
         <div className="d-flex gap-2">
@@ -171,42 +177,46 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* MODAL (OVERLAY) */}
       {showModal && (
         <div style={{
             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
             backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 10000,
             display: 'flex', justifyContent: 'center', alignItems: 'center',
-            padding: '20px', overflowY: 'auto'
+            padding: '10px'
         }}>
-            <div className="card p-4 bg-dark border-secondary" style={{
-                width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', position: 'relative'
+            <div className="card p-3 p-md-4 bg-dark text-white border-secondary" style={{
+                width: '100%', maxWidth: '800px', maxHeight: '95vh', overflowY: 'auto', position: 'relative'
             }}>
-                <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
                     <h4 className="text-white m-0">{editingId ? 'Editar Produto' : 'Criar Novo Produto'}</h4>
-                    <button onClick={closeModal} className="btn btn-sm btn-outline-secondary">X</button>
+                    <button onClick={closeModal} className="btn btn-sm btn-outline-light">X</button>
                 </div>
 
                 <form onSubmit={handleSubmit}>
                     <div className="row g-3">
-                        <div className="col-md-6">
-                            <label className="form-label">Nome</label>
-                            <input type="text" className="form-control bg-secondary text-white border-0" name="nome" value={formData.nome} onChange={handleInputChange} required />
+                        <div className="col-12">
+                            <label className="form-label text-white fw-bold">Nome do Produto</label>
+                            <input type="text" className="form-control bg-secondary text-white border-0" name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Ex: Teclado Gamer Mecânico" required />
                         </div>
-                        <div className="col-md-3">
-                            <label className="form-label">Preço</label>
-                            <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco" value={formData.preco} onChange={handleInputChange} required />
+                        
+                        <div className="col-6">
+                            <label className="form-label text-white fw-bold">Preço (R$)</label>
+                            <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco" value={formData.preco} onChange={handleInputChange} placeholder="0.00" required />
                         </div>
-                        <div className="col-md-3">
-                            <label className="form-label">Preço Antigo</label>
-                            <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco_antigo" value={formData.preco_antigo} onChange={handleInputChange} />
+                        
+                        <div className="col-6">
+                            <label className="form-label text-white fw-bold">Preço Antigo</label>
+                            <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco_antigo" value={formData.preco_antigo} onChange={handleInputChange} placeholder="Opcional" />
                         </div>
 
-                        <div className="col-md-8">
-                            <label className="form-label">Descrição</label>
-                            <textarea className="form-control bg-secondary text-white border-0" rows="2" name="descricao" value={formData.descricao} onChange={handleInputChange}></textarea>
+                        <div className="col-12">
+                            <label className="form-label text-white fw-bold">Descrição</label>
+                            <textarea className="form-control bg-secondary text-white border-0" rows="3" name="descricao" value={formData.descricao} onChange={handleInputChange} placeholder="Detalhes do produto..."></textarea>
                         </div>
-                        <div className="col-md-4">
-                            <label className="form-label">Categoria</label>
+                        
+                        <div className="col-12">
+                            <label className="form-label text-white fw-bold">Categoria</label>
                             <select className="form-select bg-secondary text-white border-0" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
                                 <option value="1">Geral</option>
                                 <option value="2">Mouses</option>
@@ -218,53 +228,51 @@ export default function AdminPage() {
                             </select>
                         </div>
 
-                        <div className="col-12 border-top border-secondary pt-3">
-                            <h6 className="text-warning">Imagens (Upload Automático)</h6>
+                        {/* ÁREA DE UPLOAD */}
+                        <div className="col-12 border-top border-secondary pt-3 mt-2">
+                            <h6 className="text-warning mb-3">Imagens (Upload Automático)</h6>
                             {uploading && <div className="text-info small mb-2">Enviando imagem... aguarde...</div>}
                             
-                            <div className="row g-2">
+                            <div className="row g-3">
                                 <div className="col-md-4">
-                                    <label className="small">Capa</label>
+                                    <label className="small text-white mb-1">Capa Principal</label>
                                     <input type="file" accept="image/*" className="form-control form-control-sm bg-secondary text-white border-0" onChange={(e) => handleImageUpload(e, 'imagem_url')} />
                                     <ImagePreview url={formData.imagem_url} label="Capa" />
                                 </div>
                                 <div className="col-md-4">
-                                    <label className="small">Galeria 1</label>
+                                    <label className="small text-white mb-1">Galeria 1</label>
                                     <input type="file" accept="image/*" className="form-control form-control-sm bg-secondary text-white border-0" onChange={(e) => handleImageUpload(e, 'imagem_url_2')} />
                                     <ImagePreview url={formData.imagem_url_2} label="Galeria 1" />
                                 </div>
                                 <div className="col-md-4">
-                                    <label className="small">Galeria 2</label>
+                                    <label className="small text-white mb-1">Galeria 2</label>
                                     <input type="file" accept="image/*" className="form-control form-control-sm bg-secondary text-white border-0" onChange={(e) => handleImageUpload(e, 'imagem_url_3')} />
                                     <ImagePreview url={formData.imagem_url_3} label="Galeria 2" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="col-md-4">
-                            <label className="form-label">Badge (Etiqueta)</label>
-                            <input type="text" className="form-control bg-secondary text-white border-0" name="badge" value={formData.badge} onChange={handleInputChange} />
+                        <div className="col-md-6">
+                            <label className="form-label text-white fw-bold">Badge (Etiqueta)</label>
+                            <input type="text" className="form-control bg-secondary text-white border-0" name="badge" value={formData.badge} onChange={handleInputChange} placeholder="Ex: NOVO, PROMO" />
                         </div>
 
-                        <div className="col-md-4 d-flex align-items-center pt-4">
+                        <div className="col-md-6 d-flex align-items-center gap-3 pt-4">
                             <div className="form-check form-switch">
                                 <input className="form-check-input" type="checkbox" name="destaque" checked={formData.destaque} onChange={handleInputChange} />
-                                <label className="form-check-label">Destaque</label>
+                                <label className="form-check-label text-white">Destaque</label>
                             </div>
-                        </div>
-                        
-                        <div className="col-md-4 d-flex align-items-center pt-4">
                             <div className="form-check form-switch">
                                 <input className="form-check-input" type="checkbox" name="ativo" checked={formData.ativo} onChange={handleInputChange} />
-                                <label className="form-check-label">Ativo</label>
+                                <label className="form-check-label text-white">Ativo</label>
                             </div>
                         </div>
 
                         <div className="col-12 mt-4 d-flex gap-2">
-                            <button type="submit" className="btn btn-success flex-grow-1" disabled={loading || uploading}>
-                                {loading ? 'Salvando...' : 'Salvar Produto'}
+                            <button type="submit" className="btn btn-success flex-grow-1 py-2 fw-bold" disabled={loading || uploading}>
+                                {loading ? 'Salvando...' : 'SALVAR PRODUTO'}
                             </button>
-                            <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancelar</button>
+                            <button type="button" className="btn btn-secondary py-2" onClick={closeModal}>Cancelar</button>
                         </div>
                     </div>
                 </form>
@@ -272,7 +280,8 @@ export default function AdminPage() {
         </div>
       )}
 
-      <h4 className="mb-3">Produtos Cadastrados ({products.length})</h4>
+      {/* LISTA DE PRODUTOS */}
+      <h4 className="mb-3 mt-4">Produtos Cadastrados ({products.length})</h4>
       <div className="table-responsive">
         <table className="table table-dark table-hover border-secondary align-middle">
           <thead>
