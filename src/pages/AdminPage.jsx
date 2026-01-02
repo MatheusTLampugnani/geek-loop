@@ -1,308 +1,303 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import './AdminPage.css';
 
-const AdminPage = () => {
+const ImagePreview = ({ url, label }) => {
+  if (!url) return null;
+  return (
+    <div className="mt-2 mb-3">
+      <p className="small text-secondary mb-1">Prévia de {label}:</p>
+      <img src={url} alt="Preview" style={{ width: '100px', height: '100px', objectFit: 'contain', border: '1px solid #333', borderRadius: 4 }} />
+    </div>
+  );
+};
+
+export default function AdminPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
-
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    nome: '', preco: '', preco_antigo: '', descricao: '',
-    imagem_url: '', imagem_url_2: '', imagem_url_3: '',
-    destaque: false, em_oferta: false, ativo: true,
-    badge: '', id_categoria: '', options: '' 
+    nome: '',
+    descricao: '',
+    preco: '',
+    preco_antigo: '',
+    id_categoria: 1,
+    imagem_url: '',
+    imagem_url_2: '',
+    imagem_url_3: '',
+    destaque: false,
+    ativo: true,
+    badge: ''
   });
 
+  const [editingId, setEditingId] = useState(null);
+
   useEffect(() => {
-    checkUser();
-    fetchData();
+    fetchProducts();
   }, []);
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) navigate('/login');
-  };
-
-  const fetchData = async () => {
+  const fetchProducts = async () => {
     setLoading(true);
-    
-    const { data: productsData, error: prodError } = await supabase
-      .from('produtos')
-      .select('*, categorias(nome)')
-      .order('id', { ascending: false });
-
-    if (prodError) console.error("Erro produtos:", prodError);
-    setProducts(productsData || []);
-
-    const { data: catData, error: catError } = await supabase
-      .from('categorias')
-      .select('*')
-      .order('nome', { ascending: true });
-    
-    if (catError) {
-        console.error("Erro categorias:", catError);
-    } else {
-        console.log("Categorias carregadas:", catData); 
-    }
-    setCategories(catData || []);
-
+    const { data, error } = await supabase.from('produtos').select('*').order('id', { ascending: false });
+    if (!error) setProducts(data);
     setLoading(false);
   };
 
-  const handleOpenModal = (product = null) => {
-    setErrorMessage('');
-    if (product) {
-      setEditingProduct(product);
-      setFormData({
-        nome: product.nome,
-        preco: product.preco,
-        preco_antigo: product.preco_antigo || '',
-        descricao: product.descricao || '',
-        imagem_url: product.imagem_url || '',
-        imagem_url_2: product.imagem_url_2 || product.imagem_2 || '',
-        imagem_url_3: product.imagem_url_3 || product.imagem_3 || '',
-        destaque: product.destaque || false,
-        em_oferta: product.em_oferta || false,
-        ativo: product.ativo !== false,
-        badge: product.badge || '',
-        id_categoria: product.id_categoria ? String(product.id_categoria) : "", 
-        
-        options: (product.opcoes || []).join(', ') 
-      });
-    } else {
-      setEditingProduct(null);
-      setFormData({
-        nome: '', preco: '', preco_antigo: '', descricao: '',
-        imagem_url: '', imagem_url_2: '', imagem_url_3: '',
-        destaque: false, em_oferta: false, ativo: true,
-        badge: '', id_categoria: '', options: ''
-      });
-    }
-    setIsModalOpen(true);
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setErrorMessage('');
-    
+  const handleImageUpload = async (e, fieldName) => {
     try {
-      let catId = null;
-      if (formData.id_categoria && formData.id_categoria !== "") {
-         catId = parseInt(formData.id_categoria);
-      }
+      const file = e.target.files[0];
+      if (!file) return;
 
-      const payload = {
-        nome: formData.nome,
-        descricao: formData.descricao,
-        preco: parseFloat(formData.preco),
-        preco_antigo: formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
-        id_categoria: catId, 
-        imagem_url: formData.imagem_url,
-        imagem_url_2: formData.imagem_url_2,
-        imagem_url_3: formData.imagem_url_3,
-        destaque: formData.destaque,
-        em_oferta: formData.em_oferta,
-        ativo: formData.ativo,
-        badge: formData.badge,
-        opcoes: formData.options.split(',').map(s => s.trim()).filter(Boolean)
-      };
+      setUploading(true);
 
-      console.log("Enviando Payload:", payload);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('imagens-produtos') // <--- NOME DO SEU BUCKET
+        .upload(filePath, file);
 
-      let error;
-      if (editingProduct) {
-        const { error: err } = await supabase
-          .from('produtos')
-          .update(payload)
-          .eq('id', editingProduct.id);
-        error = err;
-      } else {
-        const { error: err } = await supabase
-          .from('produtos')
-          .insert([payload]);
-        error = err;
-      }
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage
+        .from('imagens-produtos')
+        .getPublicUrl(filePath);
 
-      if (error) throw error;
+      setFormData(prev => ({
+        ...prev,
+        [fieldName]: data.publicUrl
+      }));
 
-      setIsModalOpen(false);
-      fetchData(); 
     } catch (error) {
-      console.error("Erro ao salvar:", error);
-      setErrorMessage(error.message || "Erro desconhecido ao salvar.");
+      console.error('Erro no upload:', error);
+      alert('Erro ao fazer upload da imagem. Verifique se o bucket "imagens-produtos" existe e é público.');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleToggleStatus = async (id, currentStatus) => {
-    const { error } = await supabase.from('produtos').update({ ativo: !currentStatus }).eq('id', id);
-    if (!error) fetchData();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const payload = {
+      ...formData,
+      preco: parseFloat(formData.preco),
+      preco_antigo: formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
+      id_categoria: parseInt(formData.id_categoria)
+    };
+
+    let error;
+    if (editingId) {
+      const { error: err } = await supabase.from('produtos').update(payload).eq('id', editingId);
+      error = err;
+    } else {
+      const { error: err } = await supabase.from('produtos').insert([payload]);
+      error = err;
+    }
+
+    setLoading(false);
+
+    if (error) {
+      alert('Erro ao salvar produto: ' + error.message);
+    } else {
+      alert('Produto salvo com sucesso!');
+      resetForm();
+      fetchProducts();
+    }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+  const handleEdit = (product) => {
+    setEditingId(product.id);
+    setFormData({
+      nome: product.nome,
+      descricao: product.descricao || '',
+      preco: product.preco,
+      preco_antigo: product.preco_antigo || '',
+      id_categoria: product.id_categoria,
+      imagem_url: product.imagem_url || '',
+      imagem_url_2: product.imagem_url_2 || '',
+      imagem_url_3: product.imagem_url_3 || '',
+      destaque: product.destaque,
+      ativo: product.ativo,
+      badge: product.badge || ''
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (loading) return <div style={{color:'white', padding: 20}}>Carregando painel...</div>;
+  const handleDelete = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir?')) return;
+    const { error } = await supabase.from('produtos').delete().eq('id', id);
+    if (!error) fetchProducts();
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      nome: '', descricao: '', preco: '', preco_antigo: '', id_categoria: 1,
+      imagem_url: '', imagem_url_2: '', imagem_url_3: '',
+      destaque: false, ativo: true, badge: ''
+    });
+  };
 
   return (
-    <div className="admin-container">
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px'}}>
-        <h1 style={{color: 'var(--neon-primary)', margin: 0}}>Painel Admin</h1>
-        <div>
-          <button className="btn-neon" onClick={() => handleOpenModal()} style={{marginRight: '10px'}}>+ NOVO PRODUTO</button>
-          <button onClick={handleLogout} className="action-btn" style={{background: '#333', color: '#fff', padding: '10px 20px'}}>Sair</button>
-        </div>
+    <div className="container py-5 mt-5 text-white">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Painel Administrativo</h2>
+        <button onClick={() => navigate('/')} className="btn btn-outline-light">Voltar ao Site</button>
+      </div>
+      
+      <div className="card p-4 bg-dark border-secondary mb-5">
+        <h4 className="text-white mb-3">{editingId ? 'Editar Produto' : 'Novo Produto'}</h4>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label">Nome do Produto</label>
+              <input type="text" className="form-control bg-secondary text-white border-0" name="nome" value={formData.nome} onChange={handleInputChange} required />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Preço (R$)</label>
+              <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco" value={formData.preco} onChange={handleInputChange} required />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Preço Antigo (Opcional)</label>
+              <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco_antigo" value={formData.preco_antigo} onChange={handleInputChange} placeholder="Para mostrar desconto" />
+            </div>
+
+            <div className="col-md-8">
+              <label className="form-label">Descrição</label>
+              <textarea className="form-control bg-secondary text-white border-0" rows="3" name="descricao" value={formData.descricao} onChange={handleInputChange}></textarea>
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">Categoria (ID)</label>
+              <select className="form-select bg-secondary text-white border-0" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
+                <option value="1">Geral</option>
+                <option value="2">Mouses</option>
+                <option value="3">Teclados</option>
+                <option value="4">Áudio</option>
+                <option value="5">Decoração</option>
+                <option value="6">Colecionáveis</option>
+                <option value="7">Diversos</option>
+              </select>
+            </div>
+
+            <div className="col-12 border-top border-secondary pt-3 mt-3">
+                <h5 className="mb-3">Imagens do Produto</h5>
+                {uploading && <div className="alert alert-info">Enviando imagem para o servidor... aguarde ⏳</div>}
+                
+                <div className="row">
+                    <div className="col-md-4">
+                        <label className="form-label text-warning">Imagem Principal (Capa)</label>
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            className="form-control bg-secondary text-white border-0" 
+                            onChange={(e) => handleImageUpload(e, 'imagem_url')} 
+                        />
+                        <input type="hidden" name="imagem_url" value={formData.imagem_url} />
+                        <ImagePreview url={formData.imagem_url} label="Principal" />
+                    </div>
+
+                    <div className="col-md-4">
+                        <label className="form-label">Imagem 2 (Galeria)</label>
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            className="form-control bg-secondary text-white border-0" 
+                            onChange={(e) => handleImageUpload(e, 'imagem_url_2')} 
+                        />
+                        <ImagePreview url={formData.imagem_url_2} label="Imagem 2" />
+                    </div>
+
+                    <div className="col-md-4">
+                        <label className="form-label">Imagem 3 (Galeria)</label>
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            className="form-control bg-secondary text-white border-0" 
+                            onChange={(e) => handleImageUpload(e, 'imagem_url_3')} 
+                        />
+                        <ImagePreview url={formData.imagem_url_3} label="Imagem 3" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">Badge (Etiqueta ex: NOVO)</label>
+              <input type="text" className="form-control bg-secondary text-white border-0" name="badge" value={formData.badge} onChange={handleInputChange} />
+            </div>
+
+            <div className="col-md-4 d-flex align-items-end">
+              <div className="form-check form-switch">
+                <input className="form-check-input" type="checkbox" name="destaque" checked={formData.destaque} onChange={handleInputChange} />
+                <label className="form-check-label">Produto em Destaque?</label>
+              </div>
+            </div>
+            
+            <div className="col-md-4 d-flex align-items-end">
+              <div className="form-check form-switch">
+                <input className="form-check-input" type="checkbox" name="ativo" checked={formData.ativo} onChange={handleInputChange} />
+                <label className="form-check-label">Produto Ativo (Visível)?</label>
+              </div>
+            </div>
+
+            <div className="col-12 mt-4 d-flex gap-2">
+              <button type="submit" className="btn btn-success flex-grow-1" disabled={loading || uploading}>
+                {loading ? 'Salvando...' : (editingId ? 'Atualizar Produto' : 'Criar Produto')}
+              </button>
+              {editingId && (
+                <button type="button" className="btn btn-secondary" onClick={resetForm}>Cancelar Edição</button>
+              )}
+            </div>
+          </div>
+        </form>
       </div>
 
-      <div className="admin-table-wrapper">
-        <table className="admin-table">
+      <h4 className="mb-3">Produtos Cadastrados ({products.length})</h4>
+      <div className="table-responsive">
+        <table className="table table-dark table-hover border-secondary">
           <thead>
             <tr>
               <th>Img</th>
               <th>Nome</th>
               <th>Preço</th>
-              <th style={{textAlign: 'center'}}>Destaque</th>
-              <th style={{textAlign: 'center'}}>Promo</th>
-              <th style={{textAlign: 'center'}}>Status</th>
-              <th style={{textAlign: 'right'}}>Ações</th>
+              <th>Categoria</th>
+              <th>Status</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             {products.map(p => (
-              <tr key={p.id} style={{opacity: p.ativo ? 1 : 0.5}}>
-                <td><img src={p.imagem_url} style={{width: 40, height: 40, objectFit: 'cover', borderRadius: 4}} alt="" /></td>
+              <tr key={p.id}>
+                <td>
+                    <img src={p.imagem_url || 'https://via.placeholder.com/40'} alt="" style={{width: 40, height: 40, objectFit: 'cover', borderRadius: 4}} />
+                </td>
                 <td>{p.nome}</td>
                 <td>R$ {p.preco}</td>
-                <td style={{textAlign: 'center'}}>{p.destaque ? '⭐' : '-'}</td>
-                <td style={{textAlign: 'center'}}>{p.em_oferta ? '🔥' : '-'}</td>
-                <td style={{textAlign: 'center'}}>
-                  <span className={p.ativo ? 'status-active' : 'status-inactive'}>
-                    {p.ativo ? 'ATIVO' : 'INATIVO'}
-                  </span>
+                <td>{p.id_categoria}</td>
+                <td>
+                  {p.ativo ? <span className="badge bg-success">Ativo</span> : <span className="badge bg-danger">Inativo</span>}
+                  {p.destaque && <span className="badge bg-warning text-dark ms-1">Destaque</span>}
                 </td>
-                <td style={{textAlign: 'right'}}>
-                  <button className="action-btn btn-edit" onClick={() => handleOpenModal(p)}>Editar</button>
-                  <button 
-                    className="action-btn btn-toggle" 
-                    style={{background: p.ativo ? '#dc3545' : '#28a745', color: 'white'}}
-                    onClick={() => handleToggleStatus(p.id, p.ativo)}
-                  >
-                    {p.ativo ? 'Desativar' : 'Ativar'}
-                  </button>
+                <td>
+                  <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(p)}>Editar</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)}>Excluir</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      {isModalOpen && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal-container">
-            <div className="modal-header">
-               <h2>{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h2>
-               <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>&times;</button>
-            </div>
-
-            {errorMessage && (
-              <div style={{background: '#ff4d4d', color: 'white', padding: '10px', borderRadius: '4px', marginBottom: '15px'}}>
-                <strong>Erro:</strong> {errorMessage}
-              </div>
-            )}
-            
-            <form onSubmit={handleSave}>
-              <div className="form-row">
-                <div style={{flex: 2}}>
-                  <label className="form-label">Nome do Produto</label>
-                  <input required className="form-input" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} />
-                </div>
-                
-                <div style={{flex: 1}}>
-                  <label className="form-label">Categoria</label>
-                  <select 
-                    required 
-                    className="form-input" 
-                    value={formData.id_categoria} 
-                    onChange={e => setFormData({...formData, id_categoria: e.target.value})}
-                  >
-                    <option value="">Selecione...</option>
-                    {categories.map((cat, index) => (
-                      <option key={cat.id_categoria || index} value={cat.id_categoria}>
-                        {cat.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div style={{flex: 1}}>
-                  <label className="form-label">Preço (R$)</label>
-                  <input required type="number" step="0.01" className="form-input" value={formData.preco} onChange={e => setFormData({...formData, preco: e.target.value})} />
-                </div>
-                <div style={{flex: 1}}>
-                  <label className="form-label">Preço Antigo (Opc)</label>
-                  <input type="number" step="0.01" className="form-input" value={formData.preco_antigo} onChange={e => setFormData({...formData, preco_antigo: e.target.value})} />
-                </div>
-              </div>
-
-              <div className="form-group">
-                 <label className="form-label">Badge/Etiqueta (ex: NOVO)</label>
-                 <input className="form-input" value={formData.badge} onChange={e => setFormData({...formData, badge: e.target.value})} />
-              </div>
-
-              <div className="form-group">
-                 <label className="form-label">Imagem Principal (URL ou Nome no Storage)</label>
-                 <input required className="form-input" value={formData.imagem_url} onChange={e => setFormData({...formData, imagem_url: e.target.value})} />
-              </div>
-
-              <div className="form-row">
-                <input placeholder="Imagem 2 (URL)" className="form-input" value={formData.imagem_url_2} onChange={e => setFormData({...formData, imagem_url_2: e.target.value})} />
-                <input placeholder="Imagem 3 (URL)" className="form-input" value={formData.imagem_url_3} onChange={e => setFormData({...formData, imagem_url_3: e.target.value})} />
-              </div>
-
-              <div className="form-group">
-                 <label className="form-label">Descrição</label>
-                 <textarea className="form-input" rows="4" value={formData.descricao} onChange={e => setFormData({...formData, descricao: e.target.value})} />
-              </div>
-
-              <div className="form-group">
-                 <label className="form-label">Opções/Cores (Separar por vírgula)</label>
-                 <input className="form-input" value={formData.options} onChange={e => setFormData({...formData, options: e.target.value})} />
-              </div>
-
-              <div className="checkbox-group">
-                <label className="checkbox-label">
-                  <input type="checkbox" checked={formData.destaque} onChange={e => setFormData({...formData, destaque: e.target.checked})} />
-                  É Destaque?
-                </label>
-                <label className="checkbox-label">
-                  <input type="checkbox" checked={formData.em_oferta} onChange={e => setFormData({...formData, em_oferta: e.target.checked})} />
-                  Em Oferta?
-                </label>
-                 <label className="checkbox-label">
-                  <input type="checkbox" checked={formData.ativo} onChange={e => setFormData({...formData, ativo: e.target.checked})} />
-                  Ativo?
-                </label>
-              </div>
-
-              <button type="submit" className="btn-neon" style={{marginTop: 20, width: '100%', padding: 15}}>
-                {editingProduct ? 'SALVAR ALTERAÇÕES' : 'CRIAR PRODUTO'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
-export default AdminPage;
+}
