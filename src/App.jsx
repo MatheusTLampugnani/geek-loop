@@ -346,7 +346,7 @@ function StoreContent() {
               <p className="m-0 opacity-75">
                 © 2025 Geek Loop Store. Todos os direitos reservados.
                 <span style={{margin: '0 10px'}}>|</span>
-                <Link to="/login" style={{color: '#333', textDecoration: 'none', fontSize: '0.8rem'}}>Admin</Link>
+                <Link to="/admin" style={{color: '#333', textDecoration: 'none', fontSize: '0.8rem'}}>Admin</Link>
               </p>
             </div>
           </div>
