@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
-// Componente simples para visualizar a imagem carregada
 const ImagePreview = ({ url, label }) => {
   if (!url) return null;
   return (
@@ -19,10 +19,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   
-  // Estado para controlar o Modal
   const [showModal, setShowModal] = useState(false);
 
-  // Estado do formulário
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -83,10 +81,12 @@ export default function AdminPage() {
         ...prev,
         [fieldName]: data.publicUrl
       }));
+      
+      toast.info("Imagem carregada! ✅", { theme: "dark", autoClose: 2000 });
 
     } catch (error) {
       console.error('Erro no upload:', error);
-      alert('Erro ao fazer upload. Verifique o bucket.');
+      toast.error('Erro ao fazer upload da imagem. Verifique o bucket.', { theme: "dark" });
     } finally {
       setUploading(false);
     }
@@ -115,9 +115,12 @@ export default function AdminPage() {
     setLoading(false);
 
     if (error) {
-      alert('Erro ao salvar: ' + error.message);
+      toast.error('Erro ao salvar: ' + error.message, { theme: "dark" });
     } else {
-      alert('Produto salvo com sucesso!');
+      toast.success(editingId ? 'Produto atualizado com sucesso! 🚀' : 'Produto criado com sucesso! 🎉', {
+        theme: "dark",
+        position: "top-center"
+      });
       closeModal(); 
       fetchProducts();
     }
@@ -142,9 +145,15 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir?')) return;
+    if (!window.confirm('Tem certeza que deseja excluir este produto?')) return;
+    
     const { error } = await supabase.from('produtos').delete().eq('id', id);
-    if (!error) fetchProducts();
+    if (!error) {
+        toast.info("Produto removido.", { theme: "dark" });
+        fetchProducts();
+    } else {
+        toast.error("Erro ao excluir.", { theme: "dark" });
+    }
   };
 
   const openNewProductModal = () => {
@@ -164,7 +173,6 @@ export default function AdminPage() {
 
   return (
     <div className="container py-5 mt-5 text-white">
-      {/* CABEÇALHO */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h2>Painel Administrativo</h2>
         <div className="d-flex gap-2">
@@ -177,7 +185,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* MODAL (OVERLAY) */}
       {showModal && (
         <div style={{
             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -228,7 +235,6 @@ export default function AdminPage() {
                             </select>
                         </div>
 
-                        {/* ÁREA DE UPLOAD */}
                         <div className="col-12 border-top border-secondary pt-3 mt-2">
                             <h6 className="text-warning mb-3">Imagens (Upload Automático)</h6>
                             {uploading && <div className="text-info small mb-2">Enviando imagem... aguarde...</div>}
@@ -280,7 +286,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* LISTA DE PRODUTOS */}
       <h4 className="mb-3 mt-4">Produtos Cadastrados ({products.length})</h4>
       <div className="table-responsive">
         <table className="table table-dark table-hover border-secondary align-middle">

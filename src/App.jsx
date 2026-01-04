@@ -15,6 +15,7 @@ import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const PlusIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
 const CartIcon = () => (<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>);
@@ -88,9 +89,7 @@ function HomePage({ setSelectedProduct }) {
 
           const mainImage = getFullUrl(item.imagem_url);
           const rawGallery = [item.imagem_url_2, item.imagem_url_3];
-          const galleryProcessed = rawGallery
-             .map(img => getFullUrl(img))
-             .filter(link => link !== null);
+          const galleryProcessed = rawGallery.map(img => getFullUrl(img)).filter(link => link !== null);
 
           return {
             ...item,
@@ -207,18 +206,15 @@ function HomePage({ setSelectedProduct }) {
                 Monte seu Combo <br />
                 <span style={{color: 'var(--neon-primary)'}}>Personalizado</span>
               </h2>
-              
               <p className="text-secondary mb-4 mt-3" style={{fontSize: '1.1rem'}}>
                 Escolha seu Teclado, Mouse e Headset favoritos e ganhe desconto automático no pacote completo.
               </p>
-              
               <div className="d-flex align-items-center justify-content-center justify-content-lg-start gap-3 mb-4">
                 <div style={{background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--neon-primary)'}}>
                    <span style={{color: 'white', fontWeight: 'bold', fontSize: '1.2rem'}}>10% OFF</span>
                    <span style={{color: '#aaa', fontSize: '0.9rem', marginLeft: '8px'}}>no Kit Completo</span>
                 </div>
               </div>
-
               <div>
                 <Link to="/monte-seu-combo">
                    <button className="btn-promo" style={{width: 'auto', padding: '15px 40px'}}>
@@ -227,15 +223,9 @@ function HomePage({ setSelectedProduct }) {
                 </Link>
               </div>
             </div>
-
             <div className="col-lg-6 d-flex align-items-center justify-content-center position-relative py-4" style={{minHeight: '300px'}}>
                <div className="position-absolute rounded-circle" style={{width: '250px', height: '250px', background: 'var(--neon-primary)', filter: 'blur(100px)', opacity: 0.15}}></div>
-               <img 
-                 src={comboImg} 
-                 alt="Exemplo de Combo" 
-                 className="img-fluid position-relative z-1" 
-                 style={{maxWidth: '85%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'}} 
-               />
+               <img src={comboImg} alt="Exemplo de Combo" className="img-fluid position-relative z-1" style={{maxWidth: '85%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'}} />
             </div>
           </div>
         </div>
@@ -307,8 +297,8 @@ function StoreContent() {
               <Route path="/ofertas" element={<AllProductsPage filterType="promo" />} />
               <Route path="/categoria/:id" element={<CategoryPage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/admin" element={<AdminPage />} />
               <Route path="/monte-seu-combo" element={<ComboBuilderPage />} />
+              <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
            </Routes>
         </div>
 
@@ -346,14 +336,14 @@ function StoreContent() {
               <p className="m-0 opacity-75">
                 © 2025 Geek Loop Store. Todos os direitos reservados.
                 <span style={{margin: '0 10px'}}>|</span>
-                <Link to="/admin" style={{color: '#333', textDecoration: 'none', fontSize: '0.8rem'}}>Admin</Link>
+                <Link to="/login" style={{color: '#333', textDecoration: 'none', fontSize: '0.8rem'}}>Admin</Link>
               </p>
             </div>
           </div>
         </footer>
 
         <CartDrawer />
-
+        
         <ToastContainer 
            position="top-right"
            autoClose={3000}
