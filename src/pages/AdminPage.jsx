@@ -225,7 +225,7 @@ export default function AdminPage() {
                         <div className="col-12">
                             <label className="form-label text-white fw-bold">Categoria</label>
                             <select className="form-select bg-secondary text-white border-0" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
-                                <option value="1">Geral</option>
+                                <option value="1">Controles</option>
                                 <option value="2">Mouses</option>
                                 <option value="3">Teclados</option>
                                 <option value="4">Áudio</option>
