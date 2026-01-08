@@ -28,11 +28,10 @@ export default function AdminPage() {
     preco_antigo: '',
     id_categoria: 1, 
     imagem_url: '',
-    imagem_url_2: '',
-    imagem_url_3: '',
-    destaque: false,
+    imagem_url_2: '',s
     ativo: true,
-    badge: ''
+    badge: '',
+    opcoes: ''
   });
 
   const [editingId, setEditingId] = useState(null);
@@ -86,7 +85,7 @@ export default function AdminPage() {
 
     } catch (error) {
       console.error('Erro no upload:', error);
-      toast.error('Erro ao fazer upload da imagem. Verifique o bucket.', { theme: "dark" });
+      toast.error('Erro ao fazer upload. Verifique o bucket.', { theme: "dark" });
     } finally {
       setUploading(false);
     }
@@ -96,11 +95,24 @@ export default function AdminPage() {
     e.preventDefault();
     setLoading(true);
 
+    let opcoesArray = null;
+    if (formData.opcoes && formData.opcoes.trim() !== '') {
+        opcoesArray = formData.opcoes.split(',').map(opt => opt.trim()).filter(opt => opt !== '');
+    }
+
     const payload = {
-      ...formData,
+      nome: formData.nome,
+      descricao: formData.descricao,
       preco: parseFloat(formData.preco),
       preco_antigo: formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
-      id_categoria: parseInt(formData.id_categoria)
+      id_categoria: parseInt(formData.id_categoria),
+      imagem_url: formData.imagem_url,
+      imagem_url_2: formData.imagem_url_2,
+      imagem_url_3: formData.imagem_url_3,
+      destaque: formData.destaque,
+      ativo: formData.ativo,
+      badge: formData.badge,
+      opcoes: opcoesArray
     };
 
     let error;
@@ -117,7 +129,7 @@ export default function AdminPage() {
     if (error) {
       toast.error('Erro ao salvar: ' + error.message, { theme: "dark" });
     } else {
-      toast.success(editingId ? 'Produto atualizado com sucesso! 🚀' : 'Produto criado com sucesso! 🎉', {
+      toast.success(editingId ? 'Produto atualizado! 🚀' : 'Produto criado! 🎉', {
         theme: "dark",
         position: "top-center"
       });
@@ -128,6 +140,12 @@ export default function AdminPage() {
 
   const handleEdit = (product) => {
     setEditingId(product.id);
+    
+    let opcoesString = '';
+    if (Array.isArray(product.opcoes)) {
+        opcoesString = product.opcoes.join(', ');
+    }
+
     setFormData({
       nome: product.nome,
       descricao: product.descricao || '',
@@ -139,7 +157,8 @@ export default function AdminPage() {
       imagem_url_3: product.imagem_url_3 || '',
       destaque: product.destaque,
       ativo: product.ativo,
-      badge: product.badge || ''
+      badge: product.badge || '',
+      opcoes: opcoesString
     });
     setShowModal(true); 
   };
@@ -161,7 +180,7 @@ export default function AdminPage() {
     setFormData({
       nome: '', descricao: '', preco: '', preco_antigo: '', id_categoria: 1,
       imagem_url: '', imagem_url_2: '', imagem_url_3: '',
-      destaque: false, ativo: true, badge: ''
+      destaque: false, ativo: true, badge: '', opcoes: ''
     });
     setShowModal(true);
   };
@@ -218,11 +237,6 @@ export default function AdminPage() {
                         </div>
 
                         <div className="col-12">
-                            <label className="form-label text-white fw-bold">Descrição</label>
-                            <textarea className="form-control bg-secondary text-white border-0" rows="3" name="descricao" value={formData.descricao} onChange={handleInputChange} placeholder="Detalhes do produto..."></textarea>
-                        </div>
-                        
-                        <div className="col-12">
                             <label className="form-label text-white fw-bold">Categoria</label>
                             <select className="form-select bg-secondary text-white border-0" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
                                 <option value="1">Controles</option>
@@ -233,6 +247,26 @@ export default function AdminPage() {
                                 <option value="6">Colecionáveis</option>
                                 <option value="7">Diversos</option>
                             </select>
+                        </div>
+
+                        <div className="col-12">
+                            <label className="form-label text-white fw-bold">Opções de Escolha (Separe por vírgula)</label>
+                            <input 
+                                type="text" 
+                                className="form-control bg-secondary text-white border-0" 
+                                name="opcoes" 
+                                value={formData.opcoes} 
+                                onChange={handleInputChange} 
+                                placeholder="Ex: Verde, Roxo, Laranja" 
+                            />
+                            <small className="text-secondary" style={{fontSize: '0.8rem'}}>
+                                Isso criará botões de seleção para o cliente.
+                            </small>
+                        </div>
+
+                        <div className="col-12">
+                            <label className="form-label text-white fw-bold">Descrição</label>
+                            <textarea className="form-control bg-secondary text-white border-0" rows="3" name="descricao" value={formData.descricao} onChange={handleInputChange} placeholder="Detalhes do produto..."></textarea>
                         </div>
 
                         <div className="col-12 border-top border-secondary pt-3 mt-2">
