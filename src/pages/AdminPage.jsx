@@ -28,7 +28,7 @@ export default function AdminPage() {
     preco_antigo: '',
     id_categoria: 1, 
     imagem_url: '',
-    imagem_url_2: '',s
+    imagem_url_2: '',
     ativo: true,
     badge: '',
     opcoes: ''
