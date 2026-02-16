@@ -311,8 +311,8 @@ function StoreContent() {
                 </h4>
                 <p className="small mb-4" style={{maxWidth: '300px', margin: '0 auto 0 0'}}>Sua loja especializada em tecnologia e artigos geek.</p>
                 <div className="social-links justify-content-center justify-content-md-start">
-                  <a href="https://instagram.com" target="_blank" className="social-icon"><InstagramIcon /></a>
-                  <a href="https://facebook.com" target="_blank" className="social-icon"><FacebookIcon /></a>
+                  <a href="https://www.instagram.com/geekloop.store" target="_blank" className="social-icon"><InstagramIcon /></a>
+                  <a href="https://www.facebook.com/marketplace/profile/100003209637782/?mibextid=6ojiHh" target="_blank" className="social-icon"><FacebookIcon /></a>
                 </div>
               </div>
               <div className="col-md-3">
