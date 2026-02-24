@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.87.3",
     "bootstrap": "^5.3.8",
+    "browser-image-compression": "^2.0.2",
     "lucide-react": "^0.561.0",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
@@ -25,7 +26,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
-    "eslint": "^9.39.1",
+    "eslint": "^10.0.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",

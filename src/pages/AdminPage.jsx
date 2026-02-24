@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import imageCompression from 'browser-image-compression';
 
 const ImagePreview = ({ url, label }) => {
   if (!url) return null;
@@ -29,6 +30,8 @@ export default function AdminPage() {
     id_categoria: 1, 
     imagem_url: '',
     imagem_url_2: '',
+    imagem_url_3: '',
+    destaque: false,
     ativo: true,
     badge: '',
     opcoes: ''
@@ -57,18 +60,26 @@ export default function AdminPage() {
 
   const handleImageUpload = async (e, fieldName) => {
     try {
-      const file = e.target.files[0];
-      if (!file) return;
+      const imageFile = e.target.files[0];
+      if (!imageFile) return;
 
       setUploading(true);
+      toast.info("Otimizando imagem para o site ficar rápido...", { theme: "dark", autoClose: 2000 });
 
-      const fileExt = file.name.split('.').pop();
+      const options = {
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 1024,
+        useWebWorker: true
+      };
+
+      const compressedFile = await imageCompression(imageFile, options);
+      const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('imagens-produtos')
-        .upload(filePath, file);
+        .upload(filePath, compressedFile);
 
       if (uploadError) throw uploadError;
 
@@ -81,11 +92,11 @@ export default function AdminPage() {
         [fieldName]: data.publicUrl
       }));
       
-      toast.info("Imagem carregada! ✅", { theme: "dark", autoClose: 2000 });
+      toast.success("Imagem otimizada e salva! ✅", { theme: "dark", autoClose: 2000 });
 
     } catch (error) {
       console.error('Erro no upload:', error);
-      toast.error('Erro ao fazer upload. Verifique o bucket.', { theme: "dark" });
+      toast.error('Erro ao fazer upload. Tente novamente.', { theme: "dark" });
     } finally {
       setUploading(false);
     }
@@ -112,7 +123,7 @@ export default function AdminPage() {
       destaque: formData.destaque,
       ativo: formData.ativo,
       badge: formData.badge,
-      opcoes: opcoesArray
+      opcoes: opcoesArray 
     };
 
     let error;
@@ -195,12 +206,8 @@ export default function AdminPage() {
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h2>Painel Administrativo</h2>
         <div className="d-flex gap-2">
-            <button onClick={() => navigate('/')} className="btn btn-outline-light">
-                Voltar ao Site
-            </button>
-            <button onClick={openNewProductModal} className="btn btn-success">
-                + Novo Produto
-            </button>
+            <button onClick={() => navigate('/')} className="btn btn-outline-light">Voltar ao Site</button>
+            <button onClick={openNewProductModal} className="btn btn-success">+ Novo Produto</button>
         </div>
       </div>
 
@@ -239,7 +246,7 @@ export default function AdminPage() {
                         <div className="col-12">
                             <label className="form-label text-white fw-bold">Categoria</label>
                             <select className="form-select bg-secondary text-white border-0" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
-                                <option value="1">Controles</option>
+                                <option value="1">Geral</option>
                                 <option value="2">Mouses</option>
                                 <option value="3">Teclados</option>
                                 <option value="4">Áudio</option>
@@ -251,17 +258,8 @@ export default function AdminPage() {
 
                         <div className="col-12">
                             <label className="form-label text-white fw-bold">Opções de Escolha (Separe por vírgula)</label>
-                            <input 
-                                type="text" 
-                                className="form-control bg-secondary text-white border-0" 
-                                name="opcoes" 
-                                value={formData.opcoes} 
-                                onChange={handleInputChange} 
-                                placeholder="Ex: Verde, Roxo, Laranja" 
-                            />
-                            <small className="text-secondary" style={{fontSize: '0.8rem'}}>
-                                Isso criará botões de seleção para o cliente.
-                            </small>
+                            <input type="text" className="form-control bg-secondary text-white border-0" name="opcoes" value={formData.opcoes} onChange={handleInputChange} placeholder="Ex: Verde, Roxo, Laranja" />
+                            <small className="text-secondary" style={{fontSize: '0.8rem'}}>Isso criará botões de seleção para o cliente.</small>
                         </div>
 
                         <div className="col-12">
@@ -269,9 +267,10 @@ export default function AdminPage() {
                             <textarea className="form-control bg-secondary text-white border-0" rows="3" name="descricao" value={formData.descricao} onChange={handleInputChange} placeholder="Detalhes do produto..."></textarea>
                         </div>
 
+                        {/* ÁREA DE UPLOAD */}
                         <div className="col-12 border-top border-secondary pt-3 mt-2">
-                            <h6 className="text-warning mb-3">Imagens (Upload Automático)</h6>
-                            {uploading && <div className="text-info small mb-2">Enviando imagem... aguarde...</div>}
+                            <h6 className="text-warning mb-3">Imagens (Upload Automático Otimizado) ⚡</h6>
+                            {uploading && <div className="text-info small mb-2">Comprimindo e enviando imagem... aguarde...</div>}
                             
                             <div className="row g-3">
                                 <div className="col-md-4">
