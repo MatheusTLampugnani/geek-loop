@@ -39,7 +39,7 @@ const StarRatingReadOnly = ({ rating }) => (
 );
 
 function ProductImage({ src, gradient, alt }) {
-  if (src) return <img src={src} alt={alt} className="card-img-hover" />;
+  if (src) return <img src={src} alt={alt} className="card-img-hover" loading="lazy" />;
   return (
     <div className="card-img-hover d-flex align-items-center justify-content-center text-center p-4" 
          style={{ background: gradient || '#333', width: '100%', height: '100%' }}>
@@ -53,6 +53,7 @@ function ProductCard({ p, onSelect }) {
     <div className="card-geek" onClick={() => onSelect(p)}>
       <div className="card-img-wrapper" style={{ position: 'relative' }}>
         {p.badge && <span className="product-tag">{p.badge}</span>}
+        
         {p.averageRating && (
            <span style={{
              position: 'absolute', top: '10px', right: '10px', zIndex: 10,
@@ -170,6 +171,7 @@ function HomePage({ setSelectedProduct }) {
             <h2 className="text-secondary small mb-3">Tecnologia e cultura em um só lugar.</h2>
             <Link to="/todos-produtos" className="btn-neon px-4 py-2 text-decoration-none">VER CATÁLOGO</Link>
          </div>
+
          {globalReviews.length > 0 && (
            <div className="home-reviews-marquee">
              <div className="home-marquee-track">
@@ -304,6 +306,57 @@ function StoreContent() {
   const { setIsCartOpen, totalItems, addToCart } = useCart();
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('p');
+    if (productId) {
+      loadDirectProduct(productId);
+    }
+  }, []);
+
+  async function loadDirectProduct(id) {
+    try {
+      const { data, error } = await supabase
+        .from('produtos')
+        .select(`*, categorias ( nome )`)
+        .eq('id', id)
+        .single();
+
+      if (data && !error) {
+        const BUCKET_NAME = 'imagens-produtos';
+        const getFullUrl = (imgName) => {
+          if (!imgName) return null;
+          if (imgName.startsWith('http')) return imgName;
+          const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(imgName);
+          return urlData.publicUrl;
+        };
+
+        const mainImage = getFullUrl(data.imagem_url);
+        const rawGallery = [data.imagem_url_2, data.imagem_url_3];
+        const galleryProcessed = rawGallery.map(img => getFullUrl(img)).filter(link => link !== null);
+
+        setSelectedProduct({
+          ...data,
+          image: mainImage,
+          imagem_url: mainImage,
+          gallery: galleryProcessed,
+          options: data.opcoes || [],
+          title: data.nome,
+          price: data.preco,
+          description: data.descricao,
+          category: data.categorias?.nome || 'Geral',
+          isFeatured: data.destaque,
+          oldPrice: data.preco_antigo,
+          badge: data.badge
+        });
+        
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar produto direto:", err);
+    }
+  }
+
   const handleAddToCart = (item) => {
     addToCart(item);
     setSelectedProduct(null);
@@ -358,6 +411,7 @@ function StoreContent() {
               <Route path="/categoria/:id" element={<CategoryPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/monte-seu-combo" element={<ComboBuilderPage />} />
+
               <Route 
                 path="/admin" 
                 element={
@@ -401,7 +455,7 @@ function StoreContent() {
             </div>
             <div className="text-center small mt-5 pt-4 border-top" style={{borderColor: 'rgba(255,255,255,0.1)'}}>
               <p className="m-0 opacity-75">
-                © 2025 Geek Loop Store.
+                © 2025 Geek Loop Store. Todos os direitos reservados.
                 <span style={{margin: '0 10px'}}>|</span>
                 <Link to="/login" style={{color: '#333', textDecoration: 'none', fontSize: '0.8rem'}}>Admin</Link>
               </p>
