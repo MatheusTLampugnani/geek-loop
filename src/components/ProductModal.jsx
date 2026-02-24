@@ -23,9 +23,7 @@ const maskName = (name) => {
   if (!name) return '';
   const str = name.trim();
   if (str.length <= 2) return str; 
-  
   const asteriscos = '*'.repeat(str.length - 2);
-  
   return `${str.charAt(0)}${asteriscos}${str.charAt(str.length - 1)}`;
 };
 
@@ -83,6 +81,12 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
     }
   };
 
+  const handleCopyLink = () => {
+    const link = `${window.location.origin}/?p=${product.id}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Link do produto copiado com sucesso!", { theme: "dark" });
+  };
+
   if (!isOpen || !product) return null;
 
   const handleBackdropClick = (e) => {
@@ -109,12 +113,14 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
   const visibleReviews = reviews.slice(0, 2);
   const overflowReviews = reviews.slice(2);
   const infiniteMarqueeItems = [...overflowReviews, ...overflowReviews, ...overflowReviews];
+
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((acc, rev) => acc + rev.nota, 0) / reviews.length).toFixed(1) 
     : 0;
 
   return (
     <div className="modal-overlay" onClick={handleBackdropClick}>
+      
       {overflowReviews.length > 0 && (
         <div className="overflow-reviews-container">
           <div className="marquee-track">
@@ -135,6 +141,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
 
       <div className="modal-content animate-pop">
         <button className="close-modal-btn" onClick={onClose}>&times;</button>
+        
         <div className="product-layout">
           <div className="image-section">
             <img src={activeImage} alt={product.nome} className="main-image" />
@@ -147,8 +154,17 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
 
           <div className="info-section">
             {product.badge && <span className="product-badge">{product.badge}</span>}
-            
-            <h2 className="product-title" style={{marginBottom: reviews.length > 0 ? '5px' : '15px'}}>{product.nome}</h2>
+            <div className="d-flex justify-content-between align-items-start gap-2" style={{marginBottom: reviews.length > 0 ? '5px' : '15px'}}>
+                <h2 className="product-title m-0">{product.nome}</h2>
+                <button 
+                    onClick={handleCopyLink} 
+                    className="btn btn-sm btn-outline-light d-flex align-items-center justify-content-center"
+                    style={{ whiteSpace: 'nowrap', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', padding: '5px 10px' }}
+                    title="Copiar link direto do produto"
+                >
+                    Link
+                </button>
+            </div>
             
             {reviews.length > 0 && (
                 <div className="d-flex align-items-center gap-2 mb-3">
