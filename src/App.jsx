@@ -22,6 +22,22 @@ const CartIcon = () => (<svg width="22" height="22" viewBox="0 0 24 24" fill="no
 const InstagramIcon = () => (<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/></svg>);
 const FacebookIcon = () => (<svg viewBox="0 0 16 16" fill="currentColor"><path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.81h-1.01c-1.181 0-1.55.75-1.55 1.55v1.11h2.147l-.278 1.95h-1.87v5.609c4.921-.592 8.46-4.825 8.46-9.991z"/></svg>);
 
+const maskName = (name) => {
+  if (!name) return '';
+  const str = name.trim();
+  if (str.length <= 2) return str; 
+  const asteriscos = '*'.repeat(str.length - 2);
+  return `${str.charAt(0)}${asteriscos}${str.charAt(str.length - 1)}`;
+};
+
+const StarRatingReadOnly = ({ rating }) => (
+  <div className="d-flex" style={{gap: '2px'}}>
+    {[1, 2, 3, 4, 5].map((star) => (
+      <span key={star} style={{ color: star <= rating ? '#ffc107' : '#444', fontSize: '0.8rem' }}>★</span>
+    ))}
+  </div>
+);
+
 function ProductImage({ src, gradient, alt }) {
   if (src) return <img src={src} alt={alt} className="card-img-hover" />;
   return (
@@ -35,8 +51,19 @@ function ProductImage({ src, gradient, alt }) {
 function ProductCard({ p, onSelect }) {
   return (
     <div className="card-geek" onClick={() => onSelect(p)}>
-      <div className="card-img-wrapper">
+      <div className="card-img-wrapper" style={{ position: 'relative' }}>
         {p.badge && <span className="product-tag">{p.badge}</span>}
+        {p.averageRating && (
+           <span style={{
+             position: 'absolute', top: '10px', right: '10px', zIndex: 10,
+             background: 'rgba(0,0,0,0.85)', color: '#ffc107', padding: '4px 8px',
+             borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', backdropFilter: 'blur(4px)',
+             border: '1px solid rgba(255,193,7,0.3)', display: 'flex', alignItems: 'center', gap: '4px'
+           }}>
+             ⭐ {p.averageRating}
+           </span>
+        )}
+
         <ProductImage src={p.imagem_url} gradient={p.gradient} alt={p.nome}/>
       </div>
       <div className="p-3 d-flex flex-column flex-grow-1">
@@ -62,6 +89,7 @@ function ProductCard({ p, onSelect }) {
 
 function HomePage({ setSelectedProduct }) {
   const [products, setProducts] = useState([]);
+  const [globalReviews, setGlobalReviews] = useState([]);
   const BUCKET_NAME = 'imagens-produtos';
 
   useEffect(() => {
@@ -70,16 +98,16 @@ function HomePage({ setSelectedProduct }) {
 
   async function fetchHomeData() {
     try {
-      const { data, error } = await supabase
+      const { data: prodData, error: prodError } = await supabase
         .from('produtos')
-        .select(`*, categorias ( nome )`)
+        .select(`*, categorias ( nome ), avaliacoes ( nota )`)
         .eq('ativo', true)
         .limit(50); 
 
-      if (error) throw error;
+      if (prodError) throw prodError;
 
-      if (data) {
-        const formattedData = data.map(item => {
+      if (prodData) {
+        const formattedData = prodData.map(item => {
           const getFullUrl = (imgName) => {
             if (!imgName) return null;
             if (imgName.startsWith('http')) return imgName;
@@ -90,6 +118,11 @@ function HomePage({ setSelectedProduct }) {
           const mainImage = getFullUrl(item.imagem_url);
           const rawGallery = [item.imagem_url_2, item.imagem_url_3];
           const galleryProcessed = rawGallery.map(img => getFullUrl(img)).filter(link => link !== null);
+
+          const avaliacoes = item.avaliacoes || [];
+          const media = avaliacoes.length > 0 
+            ? (avaliacoes.reduce((acc, curr) => acc + curr.nota, 0) / avaliacoes.length).toFixed(1)
+            : null;
 
           return {
             ...item,
@@ -103,12 +136,21 @@ function HomePage({ setSelectedProduct }) {
             category: item.categorias?.nome || 'Geral',
             isFeatured: item.destaque, 
             oldPrice: item.preco_antigo,
-            badge: item.badge 
+            badge: item.badge,
+            averageRating: media
           };
         });
-        
         setProducts(formattedData);
       }
+
+      const { data: revData } = await supabase
+        .from('avaliacoes')
+        .select('nome_usuario, nota, comentario')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (revData) setGlobalReviews(revData);
+
     } catch (error) {
       console.error("Erro ao carregar home:", error);
     }
@@ -116,6 +158,7 @@ function HomePage({ setSelectedProduct }) {
 
   const destaques = products.filter(p => p.isFeatured === true).slice(0, 4); 
   const ofertas = products.filter(p => p.oldPrice && p.oldPrice > 0).slice(0, 4);
+  const infiniteReviews = [...globalReviews, ...globalReviews, ...globalReviews];
 
   return (
     <>
@@ -127,6 +170,23 @@ function HomePage({ setSelectedProduct }) {
             <h2 className="text-secondary small mb-3">Tecnologia e cultura em um só lugar.</h2>
             <Link to="/todos-produtos" className="btn-neon px-4 py-2 text-decoration-none">VER CATÁLOGO</Link>
          </div>
+         {globalReviews.length > 0 && (
+           <div className="home-reviews-marquee">
+             <div className="home-marquee-track">
+               {infiniteReviews.map((rev, idx) => (
+                 <div key={`home-rev-${idx}`} className="home-review-item">
+                   <span className="fw-bold text-white me-2" style={{fontSize: '0.8rem'}}>
+                     {maskName(rev.nome_usuario)}
+                   </span>
+                   <StarRatingReadOnly rating={rev.nota} />
+                   <span className="ms-2 text-light text-truncate" style={{maxWidth: '220px', fontSize: '0.8rem'}}>
+                     - {rev.comentario}
+                   </span>
+                 </div>
+               ))}
+             </div>
+           </div>
+         )}
       </section>
 
       <section id="categories" className="mb-4">
@@ -298,7 +358,14 @@ function StoreContent() {
               <Route path="/categoria/:id" element={<CategoryPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/monte-seu-combo" element={<ComboBuilderPage />} />
-              <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminPage />
+                  </ProtectedRoute>
+                } 
+              />
            </Routes>
         </div>
 
@@ -311,8 +378,8 @@ function StoreContent() {
                 </h4>
                 <p className="small mb-4" style={{maxWidth: '300px', margin: '0 auto 0 0'}}>Sua loja especializada em tecnologia e artigos geek.</p>
                 <div className="social-links justify-content-center justify-content-md-start">
-                  <a href="https://www.instagram.com/geekloop.store" target="_blank" className="social-icon"><InstagramIcon /></a>
-                  <a href="https://www.facebook.com/marketplace/profile/100003209637782/?mibextid=6ojiHh" target="_blank" className="social-icon"><FacebookIcon /></a>
+                  <a href="https://instagram.com" target="_blank" className="social-icon"><InstagramIcon /></a>
+                  <a href="https://facebook.com" target="_blank" className="social-icon"><FacebookIcon /></a>
                 </div>
               </div>
               <div className="col-md-3">
@@ -334,7 +401,7 @@ function StoreContent() {
             </div>
             <div className="text-center small mt-5 pt-4 border-top" style={{borderColor: 'rgba(255,255,255,0.1)'}}>
               <p className="m-0 opacity-75">
-                © 2025 Geek Loop Store. Todos os direitos reservados.
+                © 2025 Geek Loop Store.
                 <span style={{margin: '0 10px'}}>|</span>
                 <Link to="/login" style={{color: '#333', textDecoration: 'none', fontSize: '0.8rem'}}>Admin</Link>
               </p>
