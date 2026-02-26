@@ -31,10 +31,21 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
   const [activeImage, setActiveImage] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [selectedOption, setSelectedOption] = useState(null);
-  
   const [reviews, setReviews] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({ nome: '', nota: 5, texto: '' });
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (product) {
@@ -84,7 +95,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
   const handleCopyLink = () => {
     const link = `${window.location.origin}/?p=${product.id}`;
     navigator.clipboard.writeText(link);
-    toast.success("Link do produto copiado com sucesso!", { theme: "dark" });
+    toast.success("Link do produto copiado com sucesso! 🔗", { theme: "dark" });
   };
 
   if (!isOpen || !product) return null;
@@ -154,6 +165,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
 
           <div className="info-section">
             {product.badge && <span className="product-badge">{product.badge}</span>}
+            
             <div className="d-flex justify-content-between align-items-start gap-2" style={{marginBottom: reviews.length > 0 ? '5px' : '15px'}}>
                 <h2 className="product-title m-0">{product.nome}</h2>
                 <button 
@@ -162,7 +174,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
                     style={{ whiteSpace: 'nowrap', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', padding: '5px 10px' }}
                     title="Copiar link direto do produto"
                 >
-                    Link
+                    🔗 Link
                 </button>
             </div>
             
@@ -252,7 +264,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
                 <button className="qty-btn" onClick={() => setQuantity(q => q + 1)}>+</button>
               </div>
               <button className="add-cart-btn" onClick={handleAddToCartClick}>
-                CARRINHO 🛒
+                CARRINHO
               </button>
             </div>
           </div>
