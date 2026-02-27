@@ -9,7 +9,7 @@ const ImagePreview = ({ url, label }) => {
   return (
     <div className="mt-2 mb-3">
       <p className="small text-secondary mb-1">Prévia de {label}:</p>
-      <img src={url} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', border: '1px solid #333', borderRadius: '8px', background: '#000' }} />
+      <img src={url} alt="Preview" style={{ width: '100px', height: '100px', objectFit: 'contain', border: '1px solid #333', borderRadius: 4, background: '#000' }} />
     </div>
   );
 };
@@ -64,7 +64,7 @@ export default function AdminPage() {
       if (!imageFile) return;
 
       setUploading(true);
-      toast.info("Otimizando imagem...", { theme: "dark", autoClose: 2000 });
+      toast.info("Otimizando imagem para o site ficar rápido...", { theme: "dark", autoClose: 2000 });
 
       const options = {
         maxSizeMB: 0.3,
@@ -92,7 +92,7 @@ export default function AdminPage() {
         [fieldName]: data.publicUrl
       }));
       
-      toast.success("Imagem salva! ✅", { theme: "dark", autoClose: 2000 });
+      toast.success("Imagem otimizada e salva! ✅", { theme: "dark", autoClose: 2000 });
 
     } catch (error) {
       console.error('Erro no upload:', error);
@@ -141,7 +141,8 @@ export default function AdminPage() {
       toast.error('Erro ao salvar: ' + error.message, { theme: "dark" });
     } else {
       toast.success(editingId ? 'Produto atualizado! 🚀' : 'Produto criado! 🎉', {
-        theme: "dark"
+        theme: "dark",
+        position: "top-center"
       });
       closeModal(); 
       fetchProducts();
@@ -202,125 +203,49 @@ export default function AdminPage() {
 
   return (
     <div className="container py-5 mt-5 text-white">
-      <style>{`
-        .admin-modal-overlay {
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-          z-index: 10000; display: flex; justify-content: center; align-items: center;
-          padding: 15px;
-        }
-        .admin-modal-content {
-          background: #121212; width: 100%; max-width: 800px; max-height: 90vh;
-          overflow-y: auto; border-radius: 16px; border: 1px solid #333;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column;
-        }
-        /* Oculta scrollbar no chrome mas permite rolar */
-        .admin-modal-content::-webkit-scrollbar { width: 6px; }
-        .admin-modal-content::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
-        
-        .admin-input {
-          background-color: #1a1a1a !important;
-          border: 1px solid #333 !important;
-          color: #fff !important;
-          border-radius: 8px;
-          padding: 12px 15px;
-          transition: all 0.2s;
-        }
-        .admin-input:focus {
-          border-color: var(--neon-primary) !important;
-          box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.15) !important;
-        }
-        .admin-label {
-          font-size: 0.8rem;
-          color: #bbb;
-          margin-bottom: 6px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        /* Botão de Arquivo customizado */
-        .admin-file-input::file-selector-button {
-          background: #333;
-          color: #fff;
-          border: none;
-          padding: 8px 12px;
-          border-radius: 6px;
-          margin-right: 10px;
-          font-weight: bold;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-        .admin-file-input::file-selector-button:hover {
-          background: var(--neon-primary);
-          color: #000;
-        }
-
-        /* Responsividade Mobile - Efeito Bottom Sheet */
-        @media (max-width: 768px) {
-          .admin-modal-overlay { 
-            padding: 0; 
-            align-items: flex-end; 
-          }
-          .admin-modal-content { 
-            border-radius: 20px 20px 0 0; 
-            max-height: 92vh; 
-            border-bottom: none; 
-          }
-          .admin-modal-header {
-            position: sticky;
-            top: 0;
-            background: rgba(18, 18, 18, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 10;
-            padding: 20px !important;
-            border-bottom: 1px solid #222 !important;
-          }
-        }
-      `}</style>
-
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <h2>Painel Admin</h2>
+        <h2>Painel Administrativo</h2>
         <div className="d-flex gap-2">
-            <button onClick={() => navigate('/')} className="btn btn-outline-light">
-                Ver Loja
-            </button>
-            <button onClick={openNewProductModal} className="btn btn-success fw-bold">
-                + Novo Produto
-            </button>
+            <button onClick={() => navigate('/')} className="btn btn-outline-light">Voltar ao Site</button>
+            <button onClick={openNewProductModal} className="btn btn-success">+ Novo Produto</button>
         </div>
       </div>
 
       {showModal && (
-        <div className="admin-modal-overlay" onClick={(e) => {
-            if(e.target.className === 'admin-modal-overlay') closeModal();
+        <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 10000,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            padding: '10px'
         }}>
-            <div className="admin-modal-content animate-pop">
-                
-                <div className="admin-modal-header d-flex justify-content-between align-items-center p-4 border-bottom border-secondary">
-                    <h4 className="text-white m-0 fw-bold">{editingId ? 'Editar Produto' : 'Criar Novo Produto'}</h4>
-                    <button onClick={closeModal} className="btn btn-sm btn-dark border-secondary" style={{width: '36px', height: '36px', borderRadius: '50%'}}>X</button>
+            <div className="card p-3 p-md-4 bg-dark text-white border-secondary" style={{
+                width: '100%', maxWidth: '800px', maxHeight: '95vh', overflowY: 'auto', position: 'relative'
+            }}>
+                <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
+                    <h4 className="text-white m-0">{editingId ? 'Editar Produto' : 'Criar Novo Produto'}</h4>
+                    <button onClick={closeModal} className="btn btn-sm btn-outline-light">X</button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-4">
-                    <div className="row g-4">
+                <form onSubmit={handleSubmit}>
+                    <div className="row g-3">
                         <div className="col-12">
-                            <label className="admin-label">Nome do Produto</label>
-                            <input type="text" className="form-control admin-input" name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Ex: Headset Gamer 7.1" required />
+                            <label className="form-label text-white fw-bold">Nome do Produto</label>
+                            <input type="text" className="form-control bg-secondary text-white border-0" name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Ex: Teclado Gamer Mecânico" required />
                         </div>
                         
                         <div className="col-6">
-                            <label className="admin-label">Preço (R$)</label>
-                            <input type="number" step="0.01" className="form-control admin-input" name="preco" value={formData.preco} onChange={handleInputChange} placeholder="0.00" required />
+                            <label className="form-label text-white fw-bold">Preço (R$)</label>
+                            <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco" value={formData.preco} onChange={handleInputChange} placeholder="0.00" required />
                         </div>
                         
                         <div className="col-6">
-                            <label className="admin-label">Preço Antigo (R$)</label>
-                            <input type="number" step="0.01" className="form-control admin-input" name="preco_antigo" value={formData.preco_antigo} onChange={handleInputChange} placeholder="Opcional" />
+                            <label className="form-label text-white fw-bold">Preço Antigo</label>
+                            <input type="number" step="0.01" className="form-control bg-secondary text-white border-0" name="preco_antigo" value={formData.preco_antigo} onChange={handleInputChange} placeholder="Opcional" />
                         </div>
 
                         <div className="col-12">
-                            <label className="admin-label">Categoria</label>
-                            <select className="form-select admin-input" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
+                            <label className="form-label text-white fw-bold">Categoria</label>
+                            <select className="form-select bg-secondary text-white border-0" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
                                 <option value="1">Geral</option>
                                 <option value="2">Mouses</option>
                                 <option value="3">Teclados</option>
@@ -332,59 +257,61 @@ export default function AdminPage() {
                         </div>
 
                         <div className="col-12">
-                            <label className="admin-label">Opções (Separado por vírgula)</label>
-                            <input type="text" className="form-control admin-input" name="opcoes" value={formData.opcoes} onChange={handleInputChange} placeholder="Ex: Verde, Roxo, P, M, G" />
-                            <small className="text-secondary mt-1 d-block" style={{fontSize: '0.75rem'}}>Cria botões de escolha no carrinho.</small>
+                            <label className="form-label text-white fw-bold">Opções de Escolha (Separe por vírgula)</label>
+                            <input type="text" className="form-control bg-secondary text-white border-0" name="opcoes" value={formData.opcoes} onChange={handleInputChange} placeholder="Ex: Verde, Roxo, Laranja" />
+                            <small className="text-secondary" style={{fontSize: '0.8rem'}}>Isso criará botões de seleção para o cliente.</small>
                         </div>
 
                         <div className="col-12">
-                            <label className="admin-label">Descrição</label>
-                            <textarea className="form-control admin-input" rows="4" name="descricao" value={formData.descricao} onChange={handleInputChange} placeholder="Detalhes do produto..."></textarea>
+                            <label className="form-label text-white fw-bold">Descrição</label>
+                            <textarea className="form-control bg-secondary text-white border-0" rows="3" name="descricao" value={formData.descricao} onChange={handleInputChange} placeholder="Detalhes do produto..."></textarea>
                         </div>
 
-                        <div className="col-12 border-top border-secondary pt-4 mt-2">
-                            <h6 className="text-warning fw-bold mb-3">Imagens (Envio Automático)</h6>
-                            {uploading && <div className="text-info small mb-3">⚡ Comprimindo e enviando...</div>}
+                        {/* ÁREA DE UPLOAD */}
+                        <div className="col-12 border-top border-secondary pt-3 mt-2">
+                            <h6 className="text-warning mb-3">Imagens (Upload Automático Otimizado) ⚡</h6>
+                            {uploading && <div className="text-info small mb-2">Comprimindo e enviando imagem... aguarde...</div>}
                             
                             <div className="row g-3">
                                 <div className="col-md-4">
-                                    <label className="admin-label">Capa Principal</label>
-                                    <input type="file" accept="image/*" className="form-control admin-input admin-file-input p-2" onChange={(e) => handleImageUpload(e, 'imagem_url')} />
+                                    <label className="small text-white mb-1">Capa Principal</label>
+                                    <input type="file" accept="image/*" className="form-control form-control-sm bg-secondary text-white border-0" onChange={(e) => handleImageUpload(e, 'imagem_url')} />
                                     <ImagePreview url={formData.imagem_url} label="Capa" />
                                 </div>
                                 <div className="col-md-4">
-                                    <label className="admin-label">Galeria 1</label>
-                                    <input type="file" accept="image/*" className="form-control admin-input admin-file-input p-2" onChange={(e) => handleImageUpload(e, 'imagem_url_2')} />
+                                    <label className="small text-white mb-1">Galeria 1</label>
+                                    <input type="file" accept="image/*" className="form-control form-control-sm bg-secondary text-white border-0" onChange={(e) => handleImageUpload(e, 'imagem_url_2')} />
                                     <ImagePreview url={formData.imagem_url_2} label="Galeria 1" />
                                 </div>
                                 <div className="col-md-4">
-                                    <label className="admin-label">Galeria 2</label>
-                                    <input type="file" accept="image/*" className="form-control admin-input admin-file-input p-2" onChange={(e) => handleImageUpload(e, 'imagem_url_3')} />
+                                    <label className="small text-white mb-1">Galeria 2</label>
+                                    <input type="file" accept="image/*" className="form-control form-control-sm bg-secondary text-white border-0" onChange={(e) => handleImageUpload(e, 'imagem_url_3')} />
                                     <ImagePreview url={formData.imagem_url_3} label="Galeria 2" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="col-12 border-top border-secondary pt-4">
-                             <label className="admin-label">Badge (Etiqueta Flutuante)</label>
-                             <input type="text" className="form-control admin-input" name="badge" value={formData.badge} onChange={handleInputChange} placeholder="Ex: LANÇAMENTO, 50% OFF" />
+                        <div className="col-md-6">
+                            <label className="form-label text-white fw-bold">Badge (Etiqueta)</label>
+                            <input type="text" className="form-control bg-secondary text-white border-0" name="badge" value={formData.badge} onChange={handleInputChange} placeholder="Ex: NOVO, PROMO" />
                         </div>
 
-                        <div className="col-12 d-flex gap-4 pt-2 pb-3">
-                            <div className="form-check form-switch fs-5">
+                        <div className="col-md-6 d-flex align-items-center gap-3 pt-4">
+                            <div className="form-check form-switch">
                                 <input className="form-check-input" type="checkbox" name="destaque" checked={formData.destaque} onChange={handleInputChange} />
-                                <label className="form-check-label text-white ms-2" style={{fontSize: '1rem'}}>Produto Destaque</label>
+                                <label className="form-check-label text-white">Destaque</label>
                             </div>
-                            <div className="form-check form-switch fs-5">
+                            <div className="form-check form-switch">
                                 <input className="form-check-input" type="checkbox" name="ativo" checked={formData.ativo} onChange={handleInputChange} />
-                                <label className="form-check-label text-white ms-2" style={{fontSize: '1rem'}}>Ativo na Loja</label>
+                                <label className="form-check-label text-white">Ativo</label>
                             </div>
                         </div>
 
-                        <div className="col-12 mt-2">
-                            <button type="submit" className="btn btn-success w-100 py-3 fw-bold fs-5 shadow" disabled={loading || uploading}>
+                        <div className="col-12 mt-4 d-flex gap-2">
+                            <button type="submit" className="btn btn-success flex-grow-1 py-2 fw-bold" disabled={loading || uploading}>
                                 {loading ? 'Salvando...' : 'SALVAR PRODUTO'}
                             </button>
+                            <button type="button" className="btn btn-secondary py-2" onClick={closeModal}>Cancelar</button>
                         </div>
                     </div>
                 </form>
@@ -396,7 +323,7 @@ export default function AdminPage() {
       <div className="table-responsive">
         <table className="table table-dark table-hover border-secondary align-middle">
           <thead>
-            <tr style={{color: '#aaa'}}>
+            <tr>
               <th>Img</th>
               <th>Nome</th>
               <th>Preço</th>
@@ -407,13 +334,13 @@ export default function AdminPage() {
             {products.map(p => (
               <tr key={p.id}>
                 <td>
-                    <img src={p.imagem_url || 'https://via.placeholder.com/40'} alt="" style={{width: 50, height: 50, objectFit: 'cover', borderRadius: 8}} />
+                    <img src={p.imagem_url || 'https://via.placeholder.com/40'} alt="" style={{width: 40, height: 40, objectFit: 'cover', borderRadius: 4}} />
                 </td>
                 <td>
-                    <div className="fw-bold text-truncate" style={{maxWidth: '180px'}}>{p.nome}</div>
-                    <small className={p.ativo ? "text-success" : "text-danger"}>{p.ativo ? '🟢 Ativo' : '🔴 Inativo'}</small>
+                    <div className="fw-bold text-truncate" style={{maxWidth: '150px'}}>{p.nome}</div>
+                    <small className="text-secondary">{p.ativo ? '🟢 Ativo' : '🔴 Inativo'}</small>
                 </td>
-                <td className="fw-bold">R$ {p.preco}</td>
+                <td>R$ {p.preco}</td>
                 <td>
                   <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(p)}>✏️</button>
                   <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)}>🗑️</button>
