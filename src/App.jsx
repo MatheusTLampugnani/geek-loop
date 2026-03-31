@@ -105,7 +105,7 @@ function HomePage({ setSelectedProduct }) {
         .from('produtos')
         .select(`*, categorias ( nome ), avaliacoes ( nota )`)
         .eq('ativo', true)
-        .limit(50); 
+        .limit(16); 
 
       if (prodError) throw prodError;
 
