@@ -19,14 +19,6 @@ const StarRating = ({ rating, setRating, editable = false }) => {
   );
 };
 
-const maskName = (name) => {
-  if (!name) return '';
-  const str = name.trim();
-  if (str.length <= 2) return str; 
-  const asteriscos = '*'.repeat(str.length - 2);
-  return `${str.charAt(0)}${asteriscos}${str.charAt(str.length - 1)}`;
-};
-
 export default function ProductModal({ isOpen, product, onClose, onAddToCart }) {
   const [activeImage, setActiveImage] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -35,6 +27,17 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
   const [reviews, setReviews] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReview, setNewReview] = useState({ nome: '', nota: 5, texto: '' });
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'; 
+    } else {
+      document.body.style.overflow = ''; 
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (product) {
@@ -84,7 +87,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
   const handleCopyLink = () => {
     const link = `${window.location.origin}/?p=${product.id}`;
     navigator.clipboard.writeText(link);
-    toast.success("Link do produto copiado com sucesso!", { theme: "dark" });
+    toast.success("Link do produto copiado com sucesso! 🔗", { theme: "dark" });
   };
 
   if (!isOpen || !product) return null;
@@ -127,7 +130,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
             {infiniteMarqueeItems.map((rev, idx) => (
               <div key={`overflow-${idx}`} className="overflow-review-item">
                 <span className="fw-bold text-white me-2" style={{fontSize: '0.8rem', whiteSpace: 'nowrap'}}>
-                  {maskName(rev.nome_usuario)}
+                  {rev.nome_usuario} {/* Nome sem máscara */}
                 </span>
                 <StarRating rating={rev.nota} />
                 <span className="ms-2 text-secondary text-truncate" style={{maxWidth: '180px', fontSize: '0.8rem'}}>
@@ -154,6 +157,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
 
           <div className="info-section">
             {product.badge && <span className="product-badge">{product.badge}</span>}
+            
             <div className="d-flex justify-content-between align-items-start gap-2" style={{marginBottom: reviews.length > 0 ? '5px' : '15px'}}>
                 <h2 className="product-title m-0">{product.nome}</h2>
                 <button 
@@ -162,7 +166,7 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
                     style={{ whiteSpace: 'nowrap', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', padding: '5px 10px' }}
                     title="Copiar link direto do produto"
                 >
-                    Link
+                    🔗 Link
                 </button>
             </div>
             
@@ -231,15 +235,17 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
                         <p className="text-secondary small mt-2">Ninguém avaliou ainda. Seja o primeiro!</p>
                     ) : (
                         visibleReviews.map((rev, idx) => (
-                            <div key={idx} className="review-item">
-                                <div className="d-flex justify-content-between mb-1">
-                                    <span className="fw-bold text-white small">
-                                      {maskName(rev.nome_usuario)}
-                                    </span>
-                                    <StarRating rating={rev.nota} />
-                                </div>
-                                <p className="text-secondary small m-0">{rev.comentario}</p>
-                            </div>
+                          <div key={idx} className="review-item">
+                              <div className="d-flex justify-content-between mb-1">
+                                  <span className="fw-bold text-white small">
+                                    {rev.nome_usuario || 'Cliente'}
+                                  </span>
+                                  <StarRating rating={rev.nota} />
+                              </div>
+                              <p className="text-secondary small m-0">
+                                {rev.comentario || 'Nenhum comentário informado.'}
+                              </p>
+                          </div>
                         ))
                     )}
                 </div>
