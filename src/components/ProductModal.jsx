@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { toast } from 'react-toastify'; 
+import imageCompression from 'browser-image-compression';
 import './ProductModal.css';
 
-const StarRating = ({ rating, setRating, editable = false }) => {
+const StarRating = ({ rating, setRating, editable = false, size = "normal" }) => {
   return (
     <div className="star-rating">
       {[1, 2, 3, 4, 5].map((star) => (
         <span
           key={star}
-          className={`star ${star <= rating ? 'filled' : ''} ${editable ? 'editable' : ''}`}
+          className={`star ${star <= rating ? 'filled' : ''} ${editable ? 'editable' : ''} ${size === 'large' ? 'star-large' : ''}`}
           onClick={() => editable && setRating(star)}
         >
           ★
@@ -26,7 +27,9 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
   
   const [reviews, setReviews] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [newReview, setNewReview] = useState({ nome: '', nota: 5, texto: '' });
+  
+  const [newReview, setNewReview] = useState({ nome: '', nota: 5, texto: '', imagem_url: '' });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -59,6 +62,38 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
     if (!error) setReviews(data || []);
   };
 
+  const handleReviewImageUpload = async (e) => {
+    try {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      setUploadingImage(true);
+      toast.info("Otimizando foto...", { theme: "dark", autoClose: 2000 });
+
+      const options = { maxSizeMB: 0.3, maxWidthOrHeight: 800, useWebWorker: true };
+      const compressedFile = await imageCompression(file, options);
+
+      const fileExt = compressedFile.name.split('.').pop();
+      const fileName = `review_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('imagens-produtos')
+        .upload(fileName, compressedFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('imagens-produtos').getPublicUrl(fileName);
+
+      setNewReview(prev => ({ ...prev, imagem_url: data.publicUrl }));
+      toast.success("Foto anexada! 📸", { theme: "dark" });
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao subir imagem.", { theme: "dark" });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!newReview.nome || !newReview.texto) {
@@ -69,7 +104,8 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
         produto_id: product.id,
         nome_usuario: newReview.nome,
         nota: newReview.nota,
-        comentario: newReview.texto
+        comentario: newReview.texto,
+        imagem_url: newReview.imagem_url
     };
 
     const { error } = await supabase.from('avaliacoes').insert([payload]);
@@ -78,8 +114,8 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
         toast.error("Erro ao enviar avaliação. Tente novamente.", { theme: "dark" });
     } else {
         setReviews([payload, ...reviews]);
-        setShowReviewForm(false);
-        setNewReview({ nome: '', nota: 5, texto: '' });
+        setShowReviewForm(false); 
+        setNewReview({ nome: '', nota: 5, texto: '', imagem_url: '' });
         toast.success("Obrigado pela sua avaliação! 🚀", { theme: "dark" });
     }
   };
@@ -123,14 +159,13 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
 
   return (
     <div className="modal-overlay" onClick={handleBackdropClick}>
-      
-      {overflowReviews.length > 0 && (
+      {overflowReviews.length > 0 && !showReviewForm && (
         <div className="overflow-reviews-container">
           <div className="marquee-track">
             {infiniteMarqueeItems.map((rev, idx) => (
               <div key={`overflow-${idx}`} className="overflow-review-item">
                 <span className="fw-bold text-white me-2" style={{fontSize: '0.8rem', whiteSpace: 'nowrap'}}>
-                  {rev.nome_usuario} {/* Nome sem máscara */}
+                  {rev.nome_usuario} 
                 </span>
                 <StarRating rating={rev.nota} />
                 <span className="ms-2 text-secondary text-truncate" style={{maxWidth: '180px', fontSize: '0.8rem'}}>
@@ -143,9 +178,88 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
       )}
 
       <div className="modal-content animate-pop">
-        <button className="close-modal-btn" onClick={onClose}>&times;</button>
-        
-        <div className="product-layout">
+        {!showReviewForm && <button className="close-modal-btn" onClick={onClose}>&times;</button>}
+
+        {showReviewForm && (
+            <div className="write-review-screen animate-slide-up">
+                <div className="write-review-header d-flex justify-content-between align-items-center">
+                    <button className="btn btn-sm btn-outline-light border-0" onClick={() => setShowReviewForm(false)}>
+                        ← Voltar
+                    </button>
+                    <h5 className="m-0 text-white fw-bold">Avaliar Produto</h5>
+                    <div style={{width: '60px'}}></div> 
+                </div>
+
+                <div className="write-review-body">
+                    <div className="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style={{background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.05)'}}>
+                        <img src={product.imagem_url} alt={product.nome} style={{width: 60, height: 60, objectFit: 'cover', borderRadius: 8}} />
+                        <div>
+                            <p className="text-secondary small m-0 mb-1 fw-bold text-uppercase">Como estava o produto?</p>
+                            <h6 className="text-white m-0 fw-bold">{product.nome}</h6>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmitReview}>
+                        <div className="mb-4 text-center py-3">
+                            <p className="text-white fw-bold mb-2">Sua nota geral</p>
+                            <div className="d-flex justify-content-center">
+                                <StarRating rating={newReview.nota} setRating={(n) => setNewReview({...newReview, nota: n})} editable={true} size="large" />
+                            </div>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="text-secondary small fw-bold mb-2 d-block">Seu Nome ou Apelido</label>
+                            <input 
+                                type="text" placeholder="Ex: Matheus" required
+                                className="form-control bg-dark text-white border-secondary p-3"
+                                value={newReview.nome} onChange={e => setNewReview({...newReview, nome: e.target.value})}
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="text-secondary small fw-bold mb-2 d-block">Compartilhe uma foto (Opcional)</label>
+                            <div className="review-image-upload-box">
+                                {newReview.imagem_url ? (
+                                    <div className="position-relative w-100 text-center">
+                                        <img src={newReview.imagem_url} alt="Sua foto" className="review-image-preview" />
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-sm btn-danger position-absolute" 
+                                            style={{top: '-10px', right: '0px', borderRadius: '50%', width: '30px', height: '30px', padding: 0}}
+                                            onClick={() => setNewReview({...newReview, imagem_url: ''})}
+                                        >X</button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <input type="file" accept="image/*" onChange={handleReviewImageUpload} disabled={uploadingImage} />
+                                        <div className="text-secondary fw-bold">
+                                            {uploadingImage ? '⏳ Carregando...' : '📷 Clique para enviar foto'}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <label className="text-secondary small fw-bold mb-2 d-block d-flex justify-content-between">
+                                <span>Escreva sua avaliação</span>
+                                <span>(obrigatório)</span>
+                            </label>
+                            <textarea 
+                                placeholder="O que os outros clientes precisam saber?" required
+                                className="form-control bg-dark text-white border-secondary p-3" rows="4"
+                                value={newReview.texto} onChange={e => setNewReview({...newReview, texto: e.target.value})}
+                            ></textarea>
+                        </div>
+                        <button type="submit" className="btn btn-warning w-100 fw-bold py-3 fs-5 mt-auto" disabled={uploadingImage}>
+                           Enviar Avaliação
+                        </button>
+                    </form>
+                </div>
+            </div>
+        )}
+
+        <div className="product-layout" style={{ display: showReviewForm ? 'none' : 'flex' }}>
           <div className="image-section">
             <img src={activeImage} alt={product.nome} className="main-image" />
             <div className="gallery-thumbs">
@@ -198,54 +312,45 @@ export default function ProductModal({ isOpen, product, onClose, onAddToCart }) 
                 </div>
             )}
 
-            <div className="reviews-section" style={{ position: 'relative', minHeight: showReviewForm ? '280px' : 'auto' }}>
+            <div className="reviews-section">
                 <div className="reviews-header">
                     <h5 className="m-0 text-white" style={{fontSize: '1rem'}}>
                       Avaliações ({reviews.length})
                     </h5>
-                    <button className="btn-write-review" onClick={() => setShowReviewForm(!showReviewForm)}>
-                        {showReviewForm ? 'Fechar' : '+ Avaliar'}
+                    <button className="btn-write-review" onClick={() => setShowReviewForm(true)}>
+                        + Avaliar
                     </button>
                 </div>
-
-                {showReviewForm && (
-                    <div className="review-form-overlay">
-                        <form className="review-form" onSubmit={handleSubmitReview}>
-                            <input 
-                                type="text" placeholder="Seu Nome" required
-                                className="form-control mb-2 bg-dark text-white border-secondary"
-                                value={newReview.nome} onChange={e => setNewReview({...newReview, nome: e.target.value})}
-                            />
-                            <div className="mb-2 d-flex align-items-center gap-2">
-                                <span className="text-secondary small">Sua nota:</span>
-                                <StarRating rating={newReview.nota} setRating={(n) => setNewReview({...newReview, nota: n})} editable={true} />
-                            </div>
-                            <textarea 
-                                placeholder="O que achou do produto?" required
-                                className="form-control mb-3 bg-dark text-white border-secondary" rows="2"
-                                value={newReview.texto} onChange={e => setNewReview({...newReview, texto: e.target.value})}
-                            ></textarea>
-                            <button type="submit" className="btn btn-sm btn-success w-100 fw-bold py-2">Enviar</button>
-                        </form>
-                    </div>
-                )}
 
                 <div className="reviews-list">
                     {visibleReviews.length === 0 ? (
                         <p className="text-secondary small mt-2">Ninguém avaliou ainda. Seja o primeiro!</p>
                     ) : (
                         visibleReviews.map((rev, idx) => (
-                          <div key={idx} className="review-item">
-                              <div className="d-flex justify-content-between mb-1">
-                                  <span className="fw-bold text-white small">
-                                    {rev.nome_usuario || 'Cliente'}
-                                  </span>
-                                  <StarRating rating={rev.nota} />
-                              </div>
-                              <p className="text-secondary small m-0">
-                                {rev.comentario || 'Nenhum comentário informado.'}
-                              </p>
-                          </div>
+                            <div key={idx} className="review-item">
+                                <div className="d-flex align-items-center gap-2 mb-2">
+                                    <div style={{
+                                        width: 36, height: 36, borderRadius: '50%', background: '#333',
+                                        display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fff', fontWeight: 'bold'
+                                    }}>
+                                        {(rev.nome_usuario || 'A').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div className="fw-bold text-white small" style={{lineHeight: 1}}>
+                                          {rev.nome_usuario || 'Cliente Anônimo'}
+                                        </div>
+                                        <StarRating rating={rev.nota} />
+                                    </div>
+                                </div>
+                                <p className="text-secondary small m-0 pt-1" style={{borderTop: '1px solid rgba(255,255,255,0.05)'}}>
+                                    {rev.comentario || 'Nenhum comentário informado.'}
+                                </p>
+                                {rev.imagem_url && (
+                                    <div className="mt-2">
+                                        <img src={rev.imagem_url} alt="Foto do Cliente" className="customer-review-photo" />
+                                    </div>
+                                )}
+                            </div>
                         ))
                     )}
                 </div>
