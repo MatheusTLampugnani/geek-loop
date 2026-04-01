@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom"; // <-- useLocation adicionado
+import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom"; 
 import './App.css';
 import logo from './assets/logo1.jpeg';
 import comboImg from './assets/combo-gamer.png';
@@ -19,11 +19,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
 
@@ -93,6 +89,7 @@ function ProductCard({ p, onSelect }) {
 function HomePage({ setSelectedProduct }) {
   const [products, setProducts] = useState([]);
   const [globalReviews, setGlobalReviews] = useState([]);
+  const [comboDiscount, setComboDiscount] = useState(10);
   const BUCKET_NAME = 'imagens-produtos';
 
   useEffect(() => {
@@ -153,6 +150,11 @@ function HomePage({ setSelectedProduct }) {
         .limit(10);
       
       if (revData) setGlobalReviews(revData);
+
+      const { data: configData } = await supabase.from('configuracoes').select('desconto_combo').eq('id', 1).single();
+      if (configData && configData.desconto_combo) {
+          setComboDiscount(configData.desconto_combo);
+      }
 
     } catch (error) {
       console.error("Erro ao carregar home:", error);
@@ -275,7 +277,7 @@ function HomePage({ setSelectedProduct }) {
               </p>
               <div className="d-flex align-items-center justify-content-center justify-content-lg-start gap-3 mb-4">
                 <div style={{background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--neon-primary)'}}>
-                   <span style={{color: 'white', fontWeight: 'bold', fontSize: '1.2rem'}}>10% OFF</span>
+                   <span style={{color: 'white', fontWeight: 'bold', fontSize: '1.2rem'}}>{comboDiscount}% OFF</span>
                    <span style={{color: '#aaa', fontSize: '0.9rem', marginLeft: '8px'}}>no Kit Completo</span>
                 </div>
               </div>

@@ -24,6 +24,9 @@ export default function AdminPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
 
+  const [comboDiscount, setComboDiscount] = useState(10);
+  const [savingConfig, setSavingConfig] = useState(false);
+
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -47,7 +50,6 @@ export default function AdminPage() {
     } else {
       document.body.style.overflow = ''; 
     }
-
     return () => {
       document.body.style.overflow = '';
     };
@@ -56,7 +58,27 @@ export default function AdminPage() {
   useEffect(() => {
     fetchProducts();
     fetchAllReviews(); 
+    fetchConfig();
   }, []);
+
+  const fetchConfig = async () => {
+    const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
+    if (data && data.desconto_combo) {
+        setComboDiscount(data.desconto_combo);
+    }
+  };
+
+  const handleSaveConfig = async () => {
+    setSavingConfig(true);
+    const { error } = await supabase.from('configuracoes').upsert({ id: 1, desconto_combo: parseInt(comboDiscount) });
+    setSavingConfig(false);
+    
+    if (error) {
+        toast.error("Erro ao salvar configuração.", { theme: "dark" });
+    } else {
+        toast.success("Desconto atualizado com sucesso! 🎉", { theme: "dark" });
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -89,32 +111,18 @@ export default function AdminPage() {
       setUploading(true);
       toast.info("Otimizando imagem...", { theme: "dark", autoClose: 2000 });
 
-      const options = {
-        maxSizeMB: 0.3,
-        maxWidthOrHeight: 1024,
-        useWebWorker: true
-      };
-
+      const options = { maxSizeMB: 0.3, maxWidthOrHeight: 1024, useWebWorker: true };
       const compressedFile = await imageCompression(imageFile, options);
       const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('imagens-produtos')
-        .upload(filePath, compressedFile);
-
+      const { error: uploadError } = await supabase.storage.from('imagens-produtos').upload(filePath, compressedFile);
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('imagens-produtos')
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.from('imagens-produtos').getPublicUrl(filePath);
 
-      setFormData(prev => ({
-        ...prev,
-        [fieldName]: data.publicUrl
-      }));
-      
+      setFormData(prev => ({ ...prev, [fieldName]: data.publicUrl }));
       toast.success("Imagem salva! ✅", { theme: "dark", autoClose: 2000 });
 
     } catch (error) {
@@ -163,9 +171,7 @@ export default function AdminPage() {
     if (error) {
       toast.error('Erro ao salvar: ' + error.message, { theme: "dark" });
     } else {
-      toast.success(editingId ? 'Produto atualizado! 🚀' : 'Produto criado! 🎉', {
-        theme: "dark"
-      });
+      toast.success(editingId ? 'Produto atualizado! 🚀' : 'Produto criado! 🎉', { theme: "dark" });
       closeModal(); 
       fetchProducts();
     }
@@ -173,25 +179,17 @@ export default function AdminPage() {
 
   const handleEdit = (product) => {
     setEditingId(product.id);
-    
     let opcoesString = '';
     if (Array.isArray(product.opcoes)) {
         opcoesString = product.opcoes.join(', ');
     }
 
     setFormData({
-      nome: product.nome,
-      descricao: product.descricao || '',
-      preco: product.preco,
-      preco_antigo: product.preco_antigo || '',
-      id_categoria: product.id_categoria,
-      imagem_url: product.imagem_url || '',
-      imagem_url_2: product.imagem_url_2 || '',
-      imagem_url_3: product.imagem_url_3 || '',
-      destaque: product.destaque,
-      ativo: product.ativo,
-      badge: product.badge || '',
-      opcoes: opcoesString
+      nome: product.nome, descricao: product.descricao || '', preco: product.preco,
+      preco_antigo: product.preco_antigo || '', id_categoria: product.id_categoria,
+      imagem_url: product.imagem_url || '', imagem_url_2: product.imagem_url_2 || '',
+      imagem_url_3: product.imagem_url_3 || '', destaque: product.destaque, ativo: product.ativo,
+      badge: product.badge || '', opcoes: opcoesString
     });
     setShowModal(true); 
   };
@@ -277,6 +275,36 @@ export default function AdminPage() {
             <button onClick={() => navigate('/')} className="btn btn-outline-light">Ver Loja</button>
             <button onClick={openNewProductModal} className="btn btn-success fw-bold">+ Novo Produto</button>
         </div>
+      </div>
+
+      {/* --- CONFIGURAÇÕES DE COMBO --- */}
+      <div className="card bg-dark border-secondary mb-5 p-4 rounded-4 shadow-sm">
+        <h5 className="text-warning mb-3 d-flex align-items-center gap-2">Configurações da Loja</h5>
+        <div className="row align-items-end g-3">
+            <div className="col-md-4 col-8">
+                <label className="admin-label text-white">Desconto do Combo (%)</label>
+                <div className="input-group">
+                    <input 
+                        type="number" 
+                        className="form-control admin-input" 
+                        value={comboDiscount} 
+                        onChange={(e) => setComboDiscount(e.target.value)} 
+                        min="0" max="100"
+                    />
+                    <span className="input-group-text bg-secondary border-secondary text-white">%</span>
+                </div>
+            </div>
+            <div className="col-md-3 col-4">
+                <button 
+                    className="btn btn-warning w-100 py-2 fw-bold" 
+                    onClick={handleSaveConfig}
+                    disabled={savingConfig}
+                >
+                    {savingConfig ? 'Salvo!' : 'Salvar'}
+                </button>
+            </div>
+        </div>
+        <small className="text-secondary mt-2 d-block">Este valor altera automaticamente a promoção da Home e o carrinho do cliente.</small>
       </div>
 
       {/* MODAL DE PRODUTO */}
@@ -382,7 +410,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* --- MODAL DE DETALHES DO COMENTÁRIO --- */}
+      {/* MODAL DE DETALHES DO COMENTÁRIO */}
       {selectedReview && (
         <div className="admin-modal-overlay" onClick={(e) => {
             if(e.target.className === 'admin-modal-overlay') setSelectedReview(null);
@@ -437,7 +465,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* --- LISTA DE PRODUTOS --- */}
+      {/* LISTA DE PRODUTOS */}
       <h4 className="mb-3 mt-4">Produtos Cadastrados ({products.length})</h4>
       <div className="table-responsive mb-5">
         <table className="table table-dark table-hover border-secondary align-middle">
@@ -470,7 +498,7 @@ export default function AdminPage() {
         </table>
       </div>
 
-      {/* --- LISTA DE AVALIAÇÕES --- */}
+      {/* LISTA DE AVALIAÇÕES */}
       <h4 className="mb-3 mt-5 pt-3 border-top border-secondary">Avaliações dos Clientes ({reviews.length})</h4>
       <div className="table-responsive mb-5">
         <table className="table table-dark table-hover border-secondary align-middle">
