@@ -1,26 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { toast } from 'react-toastify';
 
-export const ProtectedRoute = ({ children }) => {
+export function ProtectedRoute({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      
-      if (!session) {
-        toast.error("Acesso negado. Faça login primeiro!", {
-            theme: "dark"
-        });
-      }
-    };
-
-    checkSession();
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -30,11 +20,7 @@ export const ProtectedRoute = ({ children }) => {
   }, []);
 
   if (loading) {
-    return (
-        <div style={{height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000', color: '#fff'}}>
-            Verificando permissões...
-        </div>
-    );
+    return <div className="text-center text-white mt-5 pt-5 fw-bold">Verificando credenciais...</div>;
   }
 
   if (!session) {
@@ -42,4 +28,4 @@ export const ProtectedRoute = ({ children }) => {
   }
 
   return children;
-};
+}

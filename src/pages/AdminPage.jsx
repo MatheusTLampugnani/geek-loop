@@ -4,6 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import imageCompression from 'browser-image-compression';
 
+const SettingsIcon = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>);
+const EditIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>);
+const TrashIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>);
+const EyeIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>);
+const BoxIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>);
+const PlusIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
+const LogOutIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>); // <-- NOVO ÍCONE AQUI
+const StatusDot = ({ active }) => (<span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: active ? '#28a745' : '#dc3545', marginRight: 6 }}></span>);
+
 const ImagePreview = ({ url, label }) => {
   if (!url) return null;
   return (
@@ -28,44 +37,26 @@ export default function AdminPage() {
   const [savingConfig, setSavingConfig] = useState(false);
 
   const [formData, setFormData] = useState({
-    nome: '',
-    descricao: '',
-    preco: '',
-    preco_antigo: '',
-    id_categoria: 1, 
-    imagem_url: '',
-    imagem_url_2: '',
-    imagem_url_3: '',
-    destaque: false,
-    ativo: true,
-    badge: '',
-    opcoes: ''
+    nome: '', descricao: '', preco: '', preco_antigo: '', id_categoria: 1, 
+    imagem_url: '', imagem_url_2: '', imagem_url_3: '',
+    destaque: false, ativo: true, badge: '', opcoes: ''
   });
 
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    if (showModal || selectedReview) {
-      document.body.style.overflow = 'hidden'; 
-    } else {
-      document.body.style.overflow = ''; 
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    if (showModal || selectedReview) document.body.style.overflow = 'hidden'; 
+    else document.body.style.overflow = ''; 
+    return () => { document.body.style.overflow = ''; };
   }, [showModal, selectedReview]);
 
   useEffect(() => {
-    fetchProducts();
-    fetchAllReviews(); 
-    fetchConfig();
+    fetchProducts(); fetchAllReviews(); fetchConfig(); 
   }, []);
 
   const fetchConfig = async () => {
-    const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
-    if (data && data.desconto_combo) {
-        setComboDiscount(data.desconto_combo);
-    }
+    const { data } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
+    if (data && data.desconto_combo) setComboDiscount(data.desconto_combo);
   };
 
   const handleSaveConfig = async () => {
@@ -73,11 +64,8 @@ export default function AdminPage() {
     const { error } = await supabase.from('configuracoes').upsert({ id: 1, desconto_combo: parseInt(comboDiscount) });
     setSavingConfig(false);
     
-    if (error) {
-        toast.error("Erro ao salvar configuração.", { theme: "dark" });
-    } else {
-        toast.success("Desconto atualizado com sucesso! 🎉", { theme: "dark" });
-    }
+    if (error) toast.error("Erro ao salvar configuração.", { theme: "dark" });
+    else toast.success("Desconto atualizado com sucesso!", { theme: "dark" });
   };
 
   const fetchProducts = async () => {
@@ -88,19 +76,13 @@ export default function AdminPage() {
   };
 
   const fetchAllReviews = async () => {
-    const { data, error } = await supabase
-      .from('avaliacoes')
-      .select(`*, produtos (nome)`) 
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('avaliacoes').select(`*, produtos (nome)`).order('created_at', { ascending: false });
     if (!error) setReviews(data || []);
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleImageUpload = async (e, fieldName) => {
@@ -115,15 +97,14 @@ export default function AdminPage() {
       const compressedFile = await imageCompression(imageFile, options);
       const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('imagens-produtos').upload(filePath, compressedFile);
+      const { error: uploadError } = await supabase.storage.from('imagens-produtos').upload(fileName, compressedFile);
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from('imagens-produtos').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('imagens-produtos').getPublicUrl(fileName);
 
       setFormData(prev => ({ ...prev, [fieldName]: data.publicUrl }));
-      toast.success("Imagem salva! ✅", { theme: "dark", autoClose: 2000 });
+      toast.success("Imagem salva com sucesso!", { theme: "dark", autoClose: 2000 });
 
     } catch (error) {
       console.error('Erro no upload:', error);
@@ -138,32 +119,21 @@ export default function AdminPage() {
     setLoading(true);
 
     let opcoesArray = null;
-    if (formData.opcoes && formData.opcoes.trim() !== '') {
-        opcoesArray = formData.opcoes.split(',').map(opt => opt.trim()).filter(opt => opt !== '');
-    }
+    if (formData.opcoes && formData.opcoes.trim() !== '') opcoesArray = formData.opcoes.split(',').map(opt => opt.trim()).filter(opt => opt !== '');
 
     const payload = {
-      nome: formData.nome,
-      descricao: formData.descricao,
-      preco: parseFloat(formData.preco),
+      nome: formData.nome, descricao: formData.descricao, preco: parseFloat(formData.preco),
       preco_antigo: formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
-      id_categoria: parseInt(formData.id_categoria),
-      imagem_url: formData.imagem_url,
-      imagem_url_2: formData.imagem_url_2,
-      imagem_url_3: formData.imagem_url_3,
-      destaque: formData.destaque,
-      ativo: formData.ativo,
-      badge: formData.badge,
-      opcoes: opcoesArray 
+      id_categoria: parseInt(formData.id_categoria), imagem_url: formData.imagem_url,
+      imagem_url_2: formData.imagem_url_2, imagem_url_3: formData.imagem_url_3,
+      destaque: formData.destaque, ativo: formData.ativo, badge: formData.badge, opcoes: opcoesArray 
     };
 
     let error;
     if (editingId) {
-      const { error: err } = await supabase.from('produtos').update(payload).eq('id', editingId);
-      error = err;
+      const { error: err } = await supabase.from('produtos').update(payload).eq('id', editingId); error = err;
     } else {
-      const { error: err } = await supabase.from('produtos').insert([payload]);
-      error = err;
+      const { error: err } = await supabase.from('produtos').insert([payload]); error = err;
     }
 
     setLoading(false);
@@ -171,7 +141,7 @@ export default function AdminPage() {
     if (error) {
       toast.error('Erro ao salvar: ' + error.message, { theme: "dark" });
     } else {
-      toast.success(editingId ? 'Produto atualizado! 🚀' : 'Produto criado! 🎉', { theme: "dark" });
+      toast.success(editingId ? 'Produto atualizado!' : 'Produto criado com sucesso!', { theme: "dark" });
       closeModal(); 
       fetchProducts();
     }
@@ -180,9 +150,7 @@ export default function AdminPage() {
   const handleEdit = (product) => {
     setEditingId(product.id);
     let opcoesString = '';
-    if (Array.isArray(product.opcoes)) {
-        opcoesString = product.opcoes.join(', ');
-    }
+    if (Array.isArray(product.opcoes)) opcoesString = product.opcoes.join(', ');
 
     setFormData({
       nome: product.nome, descricao: product.descricao || '', preco: product.preco,
@@ -197,109 +165,68 @@ export default function AdminPage() {
   const handleDelete = async (id) => {
     if (!window.confirm('Tem certeza que deseja excluir este produto?')) return;
     const { error } = await supabase.from('produtos').delete().eq('id', id);
-    if (!error) {
-        toast.info("Produto removido.", { theme: "dark" });
-        fetchProducts();
-    } else {
-        toast.error("Erro ao excluir.", { theme: "dark" });
-    }
+    if (!error) { toast.info("Produto removido.", { theme: "dark" }); fetchProducts(); } 
+    else { toast.error("Erro ao excluir.", { theme: "dark" }); }
   };
 
   const handleDeleteReview = async (id) => {
     if (!window.confirm('Tem certeza que deseja excluir esta avaliação?')) return;
     const { error } = await supabase.from('avaliacoes').delete().eq('id', id);
-    if (!error) {
-        toast.info("Avaliação removida com sucesso.", { theme: "dark" });
-        fetchAllReviews(); 
-    } else {
-        toast.error("Erro ao excluir avaliação.", { theme: "dark" });
-    }
+    if (!error) { toast.info("Avaliação removida.", { theme: "dark" }); fetchAllReviews(); } 
+    else { toast.error("Erro ao excluir avaliação.", { theme: "dark" }); }
   };
 
   const openNewProductModal = () => {
     setEditingId(null);
-    setFormData({
-      nome: '', descricao: '', preco: '', preco_antigo: '', id_categoria: 1,
-      imagem_url: '', imagem_url_2: '', imagem_url_3: '',
-      destaque: false, ativo: true, badge: '', opcoes: ''
-    });
+    setFormData({ nome: '', descricao: '', preco: '', preco_antigo: '', id_categoria: 1, imagem_url: '', imagem_url_2: '', imagem_url_3: '', destaque: false, ativo: true, badge: '', opcoes: '' });
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingId(null);
+  const closeModal = () => { setShowModal(false); setEditingId(null); };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.info("Você saiu do painel.", { theme: "dark" });
+    navigate('/');
   };
 
   return (
     <div className="container py-5 mt-5 text-white">
       
       <style>{`
-        .admin-modal-overlay {
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-          z-index: 10000; display: flex; justify-content: center; align-items: center;
-          padding: 15px;
-        }
-        .admin-modal-content {
-          background: #121212; width: 100%; max-width: 800px; max-height: 90vh;
-          overflow-y: auto; border-radius: 16px; border: 1px solid #333;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column;
-        }
-        .admin-modal-content::-webkit-scrollbar { width: 6px; }
-        .admin-modal-content::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
-        
-        .admin-input {
-          background-color: #1a1a1a !important; border: 1px solid #333 !important;
-          color: #fff !important; border-radius: 8px; padding: 12px 15px; transition: all 0.2s;
-        }
+        .admin-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .admin-modal-content { background: #121212; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 16px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column; }
+        .admin-modal-content::-webkit-scrollbar { width: 6px; } .admin-modal-content::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        .admin-input { background-color: #1a1a1a !important; border: 1px solid #333 !important; color: #fff !important; border-radius: 8px; padding: 12px 15px; transition: all 0.2s; }
         .admin-input:focus { border-color: var(--neon-primary) !important; box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.15) !important; }
         .admin-label { font-size: 0.8rem; color: #bbb; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .admin-file-input::file-selector-button {
-          background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 6px;
-          margin-right: 10px; font-weight: bold; cursor: pointer; transition: background 0.2s;
-        }
+        .admin-file-input::file-selector-button { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; margin-right: 10px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .admin-file-input::file-selector-button:hover { background: var(--neon-primary); color: #000; }
-
-        @media (max-width: 768px) {
-          .admin-modal-overlay { padding: 0; align-items: flex-end; }
-          .admin-modal-content { border-radius: 20px 20px 0 0; max-height: 92vh; border-bottom: none; }
-          .admin-modal-header { position: sticky; top: 0; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px); z-index: 10; padding: 20px !important; border-bottom: 1px solid #222 !important; }
-        }
+        @media (max-width: 768px) { .admin-modal-overlay { padding: 0; align-items: flex-end; } .admin-modal-content { border-radius: 20px 20px 0 0; max-height: 92vh; border-bottom: none; } .admin-modal-header { position: sticky; top: 0; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px); z-index: 10; padding: 20px !important; border-bottom: 1px solid #222 !important; } }
       `}</style>
 
-      {/* CABEÇALHO */}
+      {/* --- CABEÇALHO ATUALIZADO COM O BOTÃO DE SAIR --- */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h2>Painel Admin</h2>
         <div className="d-flex gap-2">
             <button onClick={() => navigate('/')} className="btn btn-outline-light">Ver Loja</button>
-            <button onClick={openNewProductModal} className="btn btn-success fw-bold">+ Novo Produto</button>
+            <button onClick={openNewProductModal} className="btn btn-success fw-bold d-flex align-items-center gap-1"><PlusIcon /> Novo</button>
+            <button onClick={handleLogout} className="btn btn-outline-danger fw-bold d-flex align-items-center gap-1"><LogOutIcon /> Sair</button>
         </div>
       </div>
 
-      {/* --- CONFIGURAÇÕES DE COMBO --- */}
       <div className="card bg-dark border-secondary mb-5 p-4 rounded-4 shadow-sm">
-        <h5 className="text-warning mb-3 d-flex align-items-center gap-2">Configurações da Loja</h5>
+        <h5 className="text-warning mb-3 d-flex align-items-center gap-2"><SettingsIcon /> Configurações da Loja</h5>
         <div className="row align-items-end g-3">
             <div className="col-md-4 col-8">
                 <label className="admin-label text-white">Desconto do Combo (%)</label>
                 <div className="input-group">
-                    <input 
-                        type="number" 
-                        className="form-control admin-input" 
-                        value={comboDiscount} 
-                        onChange={(e) => setComboDiscount(e.target.value)} 
-                        min="0" max="100"
-                    />
+                    <input type="number" className="form-control admin-input" value={comboDiscount} onChange={(e) => setComboDiscount(e.target.value)} min="0" max="100" />
                     <span className="input-group-text bg-secondary border-secondary text-white">%</span>
                 </div>
             </div>
             <div className="col-md-3 col-4">
-                <button 
-                    className="btn btn-warning w-100 py-2 fw-bold" 
-                    onClick={handleSaveConfig}
-                    disabled={savingConfig}
-                >
+                <button className="btn btn-warning w-100 py-2 fw-bold" onClick={handleSaveConfig} disabled={savingConfig}>
                     {savingConfig ? 'Salvo!' : 'Salvar'}
                 </button>
             </div>
@@ -307,54 +234,39 @@ export default function AdminPage() {
         <small className="text-secondary mt-2 d-block">Este valor altera automaticamente a promoção da Home e o carrinho do cliente.</small>
       </div>
 
-      {/* MODAL DE PRODUTO */}
       {showModal && (
-        <div className="admin-modal-overlay" onClick={(e) => {
-            if(e.target.className === 'admin-modal-overlay') closeModal();
-        }}>
+        <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') closeModal(); }}>
             <div className="admin-modal-content animate-pop">
-                
                 <div className="admin-modal-header d-flex justify-content-between align-items-center p-4 border-bottom border-secondary">
                     <h4 className="text-white m-0 fw-bold">{editingId ? 'Editar Produto' : 'Criar Novo Produto'}</h4>
-                    <button onClick={closeModal} className="btn btn-sm btn-dark border-secondary" style={{width: '36px', height: '36px', borderRadius: '50%'}}>X</button>
+                    <button onClick={closeModal} className="btn btn-sm btn-dark border-secondary" style={{width: '36px', height: '36px', borderRadius: '50%'}}>&times;</button>
                 </div>
-
                 <form onSubmit={handleSubmit} className="p-4">
                     <div className="row g-4">
                         <div className="col-12">
                             <label className="admin-label">Nome do Produto</label>
                             <input type="text" className="form-control admin-input" name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Ex: Headset Gamer 7.1" required />
                         </div>
-                        
                         <div className="col-6">
                             <label className="admin-label">Preço (R$)</label>
                             <input type="number" step="0.01" className="form-control admin-input" name="preco" value={formData.preco} onChange={handleInputChange} placeholder="0.00" required />
                         </div>
-                        
                         <div className="col-6">
                             <label className="admin-label">Preço Antigo (R$)</label>
                             <input type="number" step="0.01" className="form-control admin-input" name="preco_antigo" value={formData.preco_antigo} onChange={handleInputChange} placeholder="Opcional" />
                         </div>
-
                         <div className="col-12">
                             <label className="admin-label">Categoria</label>
                             <select className="form-select admin-input" name="id_categoria" value={formData.id_categoria} onChange={handleInputChange}>
-                                <option value="1">Geral</option>
-                                <option value="2">Mouses</option>
-                                <option value="3">Teclados</option>
-                                <option value="4">Áudio</option>
-                                <option value="5">Decoração</option>
-                                <option value="6">Colecionáveis</option>
-                                <option value="7">Diversos</option>
+                                <option value="1">Geral</option><option value="2">Mouses</option><option value="3">Teclados</option>
+                                <option value="4">Áudio</option><option value="5">Decoração</option><option value="6">Colecionáveis</option><option value="7">Diversos</option>
                             </select>
                         </div>
-
                         <div className="col-12">
                             <label className="admin-label">Opções (Separado por vírgula)</label>
                             <input type="text" className="form-control admin-input" name="opcoes" value={formData.opcoes} onChange={handleInputChange} placeholder="Ex: Verde, Roxo, P, M, G" />
                             <small className="text-secondary mt-1 d-block" style={{fontSize: '0.75rem'}}>Cria botões de escolha no carrinho.</small>
                         </div>
-
                         <div className="col-12">
                             <label className="admin-label">Descrição</label>
                             <textarea className="form-control admin-input" rows="4" name="descricao" value={formData.descricao} onChange={handleInputChange} placeholder="Detalhes do produto..."></textarea>
@@ -362,8 +274,7 @@ export default function AdminPage() {
 
                         <div className="col-12 border-top border-secondary pt-4 mt-2">
                             <h6 className="text-warning fw-bold mb-3">Imagens (Envio Automático)</h6>
-                            {uploading && <div className="text-info small mb-3">⚡ Comprimindo e enviando...</div>}
-                            
+                            {uploading && <div className="text-info small mb-3">Aguarde, processando...</div>}
                             <div className="row g-3">
                                 <div className="col-md-4">
                                     <label className="admin-label">Capa Principal</label>
@@ -410,15 +321,12 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* MODAL DE DETALHES DO COMENTÁRIO */}
       {selectedReview && (
-        <div className="admin-modal-overlay" onClick={(e) => {
-            if(e.target.className === 'admin-modal-overlay') setSelectedReview(null);
-        }}>
+        <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') setSelectedReview(null); }}>
             <div className="admin-modal-content animate-pop" style={{ maxWidth: '500px', height: 'auto', maxHeight: '85vh' }}>
                 <div className="admin-modal-header d-flex justify-content-between align-items-center p-4 border-bottom border-secondary">
                     <h5 className="text-white m-0 fw-bold">Detalhes da Avaliação</h5>
-                    <button onClick={() => setSelectedReview(null)} className="btn btn-sm btn-dark border-secondary" style={{width: '36px', height: '36px', borderRadius: '50%'}}>X</button>
+                    <button onClick={() => setSelectedReview(null)} className="btn btn-sm btn-dark border-secondary" style={{width: '36px', height: '36px', borderRadius: '50%'}}>&times;</button>
                 </div>
                 
                 <div className="p-4 text-white">
@@ -426,12 +334,10 @@ export default function AdminPage() {
                         <span className="admin-label">Cliente</span>
                         <div className="fs-5 fw-bold">{selectedReview.nome_usuario || 'Anônimo'}</div>
                     </div>
-                    
                     <div className="mb-4">
                         <span className="admin-label">Produto</span>
                         <div className="fs-6 text-info fw-bold">{selectedReview.produtos?.nome || 'Produto não encontrado'}</div>
                     </div>
-                    
                     <div className="mb-4">
                         <span className="admin-label">Nota</span>
                         <div className="text-warning fs-5">
@@ -439,14 +345,12 @@ export default function AdminPage() {
                             <span className="text-secondary ms-2" style={{fontSize: '0.9rem'}}>({selectedReview.nota}/5)</span>
                         </div>
                     </div>
-                    
                     <div className="mb-4">
                         <span className="admin-label">Data</span>
                         <div className="text-light">
                             {new Date(selectedReview.created_at).toLocaleDateString('pt-BR')} às {new Date(selectedReview.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
                         </div>
                     </div>
-                    
                     <div className="mb-4">
                         <span className="admin-label">Comentário Completo</span>
                         <div className="p-3 bg-dark rounded border border-secondary mt-2 text-light" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
@@ -454,18 +358,23 @@ export default function AdminPage() {
                         </div>
                     </div>
                     
-                    <button className="btn btn-danger w-100 fw-bold py-3 mt-2" onClick={() => {
-                        handleDeleteReview(selectedReview.id);
-                        setSelectedReview(null);
-                    }}>
-                        APAGAR AVALIAÇÃO
+                    {selectedReview.imagem_url && (
+                        <div className="mb-4">
+                            <span className="admin-label">Foto Anexada</span>
+                            <div className="mt-2 text-center bg-dark rounded border border-secondary p-2">
+                                <img src={selectedReview.imagem_url} alt="Foto da Avaliação" style={{maxWidth: '100%', maxHeight: '300px', borderRadius: '8px', objectFit: 'contain'}} />
+                            </div>
+                        </div>
+                    )}
+                    
+                    <button className="btn btn-danger w-100 fw-bold py-3 mt-3 d-flex align-items-center justify-content-center gap-2" onClick={() => { handleDeleteReview(selectedReview.id); setSelectedReview(null); }}>
+                        <TrashIcon /> APAGAR AVALIAÇÃO
                     </button>
                 </div>
             </div>
         </div>
       )}
 
-      {/* LISTA DE PRODUTOS */}
       <h4 className="mb-3 mt-4">Produtos Cadastrados ({products.length})</h4>
       <div className="table-responsive mb-5">
         <table className="table table-dark table-hover border-secondary align-middle">
@@ -485,12 +394,14 @@ export default function AdminPage() {
                 </td>
                 <td>
                     <div className="fw-bold text-truncate" style={{maxWidth: '180px'}}>{p.nome}</div>
-                    <small className={p.ativo ? "text-success" : "text-danger"}>{p.ativo ? '🟢 Ativo' : '🔴 Inativo'}</small>
+                    <small className={`d-flex align-items-center ${p.ativo ? "text-success" : "text-danger"}`}>
+                        <StatusDot active={p.ativo} /> {p.ativo ? 'Ativo' : 'Inativo'}
+                    </small>
                 </td>
                 <td className="fw-bold">R$ {p.preco}</td>
                 <td>
-                  <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(p)}>✏️</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)}>🗑️</button>
+                  <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(p)} title="Editar"><EditIcon /></button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)} title="Excluir"><TrashIcon /></button>
                 </td>
               </tr>
             ))}
@@ -498,7 +409,6 @@ export default function AdminPage() {
         </table>
       </div>
 
-      {/* LISTA DE AVALIAÇÕES */}
       <h4 className="mb-3 mt-5 pt-3 border-top border-secondary">Avaliações dos Clientes ({reviews.length})</h4>
       <div className="table-responsive mb-5">
         <table className="table table-dark table-hover border-secondary align-middle">
@@ -517,26 +427,30 @@ export default function AdminPage() {
               <tr key={rev.id}>
                 <td>
                     <div className="fw-bold">{rev.nome_usuario || 'Anônimo'}</div>
-                    <div className="text-warning small">⭐ {rev.nota} / 5</div>
-                    <small className="text-secondary d-block text-truncate" style={{maxWidth: '150px'}}>
-                        📦 {rev.produtos?.nome || 'Produto apagado'}
+                    <div className="text-warning small">★ {rev.nota} / 5</div>
+                    <small className="text-secondary d-flex align-items-center gap-1 text-truncate" style={{maxWidth: '150px'}}>
+                        <BoxIcon /> {rev.produtos?.nome || 'Produto apagado'}
                     </small>
                 </td>
                 <td style={{maxWidth: '200px'}}>
-                    <div className="small text-light text-truncate">
+                    <div className="small text-light text-truncate mb-1">
                         "{rev.comentario}"
                     </div>
+                    {rev.imagem_url && (
+                        <div>
+                            <img src={rev.imagem_url} alt="Anexo" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #444'}} />
+                        </div>
+                    )}
                 </td>
                 <td>
-                  <button className="btn btn-sm btn-info me-2" onClick={() => setSelectedReview(rev)} title="Ver Detalhes">👁️</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDeleteReview(rev.id)} title="Apagar">🗑️</button>
+                  <button className="btn btn-sm btn-info me-2" onClick={() => setSelectedReview(rev)} title="Ver Detalhes"><EyeIcon /></button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDeleteReview(rev.id)} title="Apagar"><TrashIcon /></button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
     </div>
   );
 }
