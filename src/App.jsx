@@ -106,7 +106,7 @@ function HomePage({ setSelectedProduct }) {
         .from('produtos')
         .select(`*, categorias ( nome ), avaliacoes ( nota )`)
         .eq('ativo', true)
-        .limit(16); 
+        .order('id', { ascending: false });
 
       if (prodError) throw prodError;
 
@@ -157,7 +157,7 @@ function HomePage({ setSelectedProduct }) {
   }
 
   const destaques = products.filter(p => p.isFeatured === true).slice(0, 4); 
-  const ofertas = products.filter(p => p.oldPrice && p.oldPrice > 0).slice(0, 4);
+  const ofertas = products.filter(p => p.oldPrice && p.oldPrice > p.price).slice(0, 4);
   const infiniteReviews = [...globalReviews, ...globalReviews, ...globalReviews];
 
   return (
@@ -295,7 +295,7 @@ function HomePage({ setSelectedProduct }) {
       <section id="contact" className="contact-card rounded-4 p-4 text-center">
         <h3 className="fw-bold text-white mb-2">Ficou com dúvida?</h3>
         <p className="text-secondary mb-4 mx-auto small" style={{maxWidth: '400px'}}>Chame a gente no WhatsApp. Nosso time te ajuda a escolher o melhor equipamento.</p>
-        <button className="btn-whatsapp" onClick={() => window.open('https://wa.me/556499470317', '_blank')}>Falar no WhatsApp</button>
+        <button className="btn-whatsapp" onClick={() => window.open('https://wa.me/5564992938448', '_blank')}>Falar no WhatsApp</button>
       </section>
     </>
   );
@@ -357,7 +357,6 @@ function StoreContent() {
     <BrowserRouter>
       <ScrollToTop /> 
       <div className="App">
-        {/* Navbar */}
         <nav className="navbar fixed-top navbar-glass flex-column justify-content-center">
           <div className="container d-flex justify-content-between align-items-center w-100">
             <div className="d-flex align-items-center">
@@ -431,7 +430,7 @@ function StoreContent() {
                 <h5 className="mb-3">Fale Conosco</h5>
                 <ul className="list-unstyled small d-flex flex-column gap-2">
                   <li>contato@geekloop.com</li>
-                  <li>(64) 99947-0317</li>
+                  <li>(64) 99293-8448</li>
                   <li>Goiás, Brasil</li>
                 </ul>
               </div>

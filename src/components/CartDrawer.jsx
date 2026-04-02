@@ -75,7 +75,7 @@ export function CartDrawer() {
                 if(i.selectedOption) msg += `   (Opção: ${i.selectedOption})\n`;
               });
               msg += `\n*Total: R$ ${cartTotal.toFixed(2)}*`;
-              window.open(`https://wa.me/556499470317?text=${encodeURIComponent(msg)}`, '_blank');
+              window.open(`https://wa.me/5564992938448?text=${encodeURIComponent(msg)}`, '_blank');
             }}
           >
             Finalizar no WhatsApp

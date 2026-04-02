@@ -10,7 +10,7 @@ const TrashIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="n
 const EyeIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>);
 const BoxIcon = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>);
 const PlusIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
-const LogOutIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>); // <-- NOVO ÍCONE AQUI
+const LogOutIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>);
 const StatusDot = ({ active }) => (<span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', backgroundColor: active ? '#28a745' : '#dc3545', marginRight: 6 }}></span>);
 
 const ImagePreview = ({ url, label }) => {
@@ -162,11 +162,39 @@ export default function AdminPage() {
     setShowModal(true); 
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este produto?')) return;
-    const { error } = await supabase.from('produtos').delete().eq('id', id);
-    if (!error) { toast.info("Produto removido.", { theme: "dark" }); fetchProducts(); } 
-    else { toast.error("Erro ao excluir.", { theme: "dark" }); }
+  const handleDelete = async (product) => {
+    if (!window.confirm('Tem certeza que deseja excluir este produto E todas as imagens dele?')) return;
+    setLoading(true);
+    try {
+        const pathsToDelete = [];
+        const extractFileName = (url) => {
+            if (!url) return null;
+            const parts = url.split('/');
+            return parts[parts.length - 1]; 
+        };
+        const img1 = extractFileName(product.imagem_url);
+        const img2 = extractFileName(product.imagem_url_2);
+        const img3 = extractFileName(product.imagem_url_3);
+
+        if (img1) pathsToDelete.push(img1);
+        if (img2) pathsToDelete.push(img2);
+        if (img3) pathsToDelete.push(img3);
+
+        if (pathsToDelete.length > 0) {
+            await supabase.storage.from('imagens-produtos').remove(pathsToDelete);
+        }
+
+        const { error: dbError } = await supabase.from('produtos').delete().eq('id', product.id);
+        if (dbError) throw dbError;
+
+        toast.info("Produto e imagens removidos com sucesso! 🧹", { theme: "dark" });
+        fetchProducts(); 
+    } catch (error) {
+        console.error(error);
+        toast.error("Erro ao excluir produto.", { theme: "dark" });
+    } finally {
+        setLoading(false);
+    }
   };
 
   const handleDeleteReview = async (id) => {
@@ -192,7 +220,6 @@ export default function AdminPage() {
 
   return (
     <div className="container py-5 mt-5 text-white">
-      
       <style>{`
         .admin-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 15px; }
         .admin-modal-content { background: #121212; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 16px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column; }
@@ -202,10 +229,33 @@ export default function AdminPage() {
         .admin-label { font-size: 0.8rem; color: #bbb; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .admin-file-input::file-selector-button { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; margin-right: 10px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .admin-file-input::file-selector-button:hover { background: var(--neon-primary); color: #000; }
-        @media (max-width: 768px) { .admin-modal-overlay { padding: 0; align-items: flex-end; } .admin-modal-content { border-radius: 20px 20px 0 0; max-height: 92vh; border-bottom: none; } .admin-modal-header { position: sticky; top: 0; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px); z-index: 10; padding: 20px !important; border-bottom: 1px solid #222 !important; } }
+        
+        /* NOVO: ESTILO DAS LISTAS (SUBSTITUI AS TABELAS) */
+        .admin-card-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 3rem; }
+        .admin-list-item {
+            background: #151515; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .admin-list-item:hover { border-color: rgba(255, 193, 7, 0.4); background: #1a1a1a; }
+        .item-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; background: #080808; border: 1px solid #333; flex-shrink: 0; }
+        .item-info { flex-grow: 1; min-width: 0; }
+        .item-title { color: #fff; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .item-meta { font-size: 0.8rem; color: #aaa; display: flex; align-items: center; }
+        .item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+        @media (max-width: 768px) { 
+            .admin-modal-overlay { padding: 0; align-items: flex-end; } 
+            .admin-modal-content { border-radius: 20px 20px 0 0; max-height: 92vh; border-bottom: none; } 
+            .admin-modal-header { position: sticky; top: 0; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px); z-index: 10; padding: 20px !important; border-bottom: 1px solid #222 !important; } 
+            
+            /* Ajuste da lista pro Celular (Os botões descem) */
+            .admin-list-item { flex-direction: column; align-items: stretch; gap: 12px; padding: 12px; }
+            .item-actions { justify-content: flex-end; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%; }
+            .item-actions .btn { padding: 8px 16px; } /* Botões maiores pra clicar com o dedo */
+        }
       `}</style>
 
-      {/* --- CABEÇALHO ATUALIZADO COM O BOTÃO DE SAIR --- */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h2>Painel Admin</h2>
         <div className="d-flex gap-2">
@@ -376,81 +426,66 @@ export default function AdminPage() {
       )}
 
       <h4 className="mb-3 mt-4">Produtos Cadastrados ({products.length})</h4>
-      <div className="table-responsive mb-5">
-        <table className="table table-dark table-hover border-secondary align-middle">
-          <thead>
-            <tr style={{color: '#aaa'}}>
-              <th>Img</th>
-              <th>Nome</th>
-              <th>Preço</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p.id}>
-                <td>
-                    <img src={p.imagem_url || 'https://via.placeholder.com/40'} alt="" style={{width: 50, height: 50, objectFit: 'cover', borderRadius: 8}} />
-                </td>
-                <td>
-                    <div className="fw-bold text-truncate" style={{maxWidth: '180px'}}>{p.nome}</div>
-                    <small className={`d-flex align-items-center ${p.ativo ? "text-success" : "text-danger"}`}>
-                        <StatusDot active={p.ativo} /> {p.ativo ? 'Ativo' : 'Inativo'}
-                    </small>
-                </td>
-                <td className="fw-bold">R$ {p.preco}</td>
-                <td>
-                  <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(p)} title="Editar"><EditIcon /></button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)} title="Excluir"><TrashIcon /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="admin-card-list">
+        {products.map(p => (
+            <div key={p.id} className="admin-list-item">
+                <div className="d-flex align-items-center gap-3 w-100" style={{minWidth: 0}}>
+                    <img src={p.imagem_url || 'https://via.placeholder.com/60'} alt={p.nome} className="item-img" />
+                    <div className="item-info">
+                        <div className="item-title" title={p.nome}>{p.nome}</div>
+                        <div className="item-meta">
+                            <StatusDot active={p.ativo} /> {p.ativo ? 'Ativo' : 'Inativo'}
+                            <span className="ms-3 text-warning fw-bold">R$ {p.preco.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="item-actions">
+                    <button className="btn btn-sm btn-primary" onClick={() => handleEdit(p)} title="Editar"><EditIcon /></button>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p)} title="Excluir"><TrashIcon /></button>
+                </div>
+            </div>
+        ))}
+        {products.length === 0 && <div className="text-center text-secondary py-4">Nenhum produto cadastrado.</div>}
       </div>
 
       <h4 className="mb-3 mt-5 pt-3 border-top border-secondary">Avaliações dos Clientes ({reviews.length})</h4>
-      <div className="table-responsive mb-5">
-        <table className="table table-dark table-hover border-secondary align-middle">
-          <thead>
-            <tr style={{color: '#aaa'}}>
-              <th>Cliente / Produto</th>
-              <th>Comentário</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reviews.length === 0 && (
-                <tr><td colSpan="3" className="text-center text-secondary py-4">Nenhuma avaliação encontrada.</td></tr>
-            )}
-            {reviews.map(rev => (
-              <tr key={rev.id}>
-                <td>
-                    <div className="fw-bold">{rev.nome_usuario || 'Anônimo'}</div>
-                    <div className="text-warning small">★ {rev.nota} / 5</div>
-                    <small className="text-secondary d-flex align-items-center gap-1 text-truncate" style={{maxWidth: '150px'}}>
+      <div className="admin-card-list">
+        {reviews.map(rev => (
+            <div key={rev.id} className="admin-list-item">
+                <div className="item-info w-100">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div className="item-title">{rev.nome_usuario || 'Anônimo'}</div>
+                            <div className="text-warning small">{'★'.repeat(rev.nota)}{'☆'.repeat(5 - rev.nota)}</div>
+                        </div>
+                        <div className="d-none d-md-flex gap-2">
+                            <button className="btn btn-sm btn-info" onClick={() => setSelectedReview(rev)} title="Ver Detalhes"><EyeIcon /></button>
+                            <button className="btn btn-sm btn-danger" onClick={() => handleDeleteReview(rev.id)} title="Apagar"><TrashIcon /></button>
+                        </div>
+                    </div>
+                    
+                    <div className="text-secondary small mb-2 d-flex align-items-center gap-1 text-truncate">
                         <BoxIcon /> {rev.produtos?.nome || 'Produto apagado'}
-                    </small>
-                </td>
-                <td style={{maxWidth: '200px'}}>
-                    <div className="small text-light text-truncate mb-1">
+                    </div>
+                    
+                    <div className="p-2 bg-dark rounded border border-secondary text-light small text-truncate">
                         "{rev.comentario}"
                     </div>
+                    
                     {rev.imagem_url && (
-                        <div>
-                            <img src={rev.imagem_url} alt="Anexo" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #444'}} />
-                        </div>
+                        <img src={rev.imagem_url} alt="Anexo" className="mt-2 rounded" style={{width: '40px', height: '40px', objectFit: 'cover', border: '1px solid #444'}} />
                     )}
-                </td>
-                <td>
-                  <button className="btn btn-sm btn-info me-2" onClick={() => setSelectedReview(rev)} title="Ver Detalhes"><EyeIcon /></button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDeleteReview(rev.id)} title="Apagar"><TrashIcon /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+                    <div className="item-actions d-md-none mt-2 pt-2 border-top border-secondary w-100 justify-content-end">
+                         <button className="btn btn-sm btn-info px-3" onClick={() => setSelectedReview(rev)}><EyeIcon /></button>
+                         <button className="btn btn-sm btn-danger px-3" onClick={() => handleDeleteReview(rev.id)}><TrashIcon /></button>
+                    </div>
+                </div>
+            </div>
+        ))}
+        {reviews.length === 0 && <div className="text-center text-secondary py-4">Nenhuma avaliação encontrada.</div>}
       </div>
+
     </div>
   );
 }

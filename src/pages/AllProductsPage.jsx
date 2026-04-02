@@ -1,179 +1,137 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import ProductModal from '../components/ProductModal';
-import { useCart } from '../context/CartContext';
-import './CategoryPage.css'; 
+import { Link } from 'react-router-dom';
 
-export const AllProductsPage = ({ filterType }) => {
-  const { addToCart } = useCart();
+const PlusIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>);
+const StarSmallIcon = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>);
+
+function ProductCard({ p }) {
+  return (
+    <Link to={`/?p=${p.id}`} style={{ textDecoration: 'none' }}>
+        <div className="card-geek">
+        <div className="card-img-wrapper" style={{ position: 'relative' }}>
+            {p.badge && <span className="product-tag">{p.badge}</span>}
+            
+            {p.averageRating && (
+            <span style={{
+                position: 'absolute', top: '10px', right: '10px', zIndex: 10,
+                background: 'rgba(0,0,0,0.85)', color: '#ffc107', padding: '4px 8px',
+                borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(255,193,7,0.3)', display: 'flex', alignItems: 'center', gap: '4px'
+            }}>
+                <StarSmallIcon /> {p.averageRating}
+            </span>
+            )}
+            <img src={p.imagem_url} alt={p.nome} className="card-img-hover" loading="lazy" />
+        </div>
+        <div className="p-3 d-flex flex-column flex-grow-1">
+            <span className="badge-category align-self-start mb-1" style={{fontSize: '0.6rem'}}>{p.category}</span>
+            <h6 className="fw-bold text-white mb-1 text-truncate" style={{fontSize: '0.95rem'}}>{p.nome}</h6>
+            <div className="mt-auto pt-2 d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25">
+            <div>
+                <div className="fw-bold text-white" style={{fontSize: '1rem'}}>
+                {p.preco_antigo > 0 && p.preco_antigo > p.preco && (
+                    <span style={{textDecoration: 'line-through', color: '#666', fontSize: '0.8rem', marginRight: '5px'}}>
+                    R$ {Number(p.preco_antigo).toFixed(2)}
+                    </span>
+                )}
+                R$ {p.preco.toFixed(2)}
+                </div>
+            </div>
+            <button className="btn-quick-add"><PlusIcon /></button>
+            </div>
+        </div>
+        </div>
+    </Link>
+  );
+}
+
+export function AllProductsPage({ filterType }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [sortOrder, setSortOrder] = useState('default');
-
-  const BUCKET_NAME = 'imagens-produtos'; 
 
   useEffect(() => {
-    fetchAllProducts();
+    fetchProducts();
   }, [filterType]);
 
-  const fetchAllProducts = async () => {
+  async function fetchProducts() {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      let query = supabase
+      const { data, error } = await supabase
         .from('produtos')
-        .select(`*, categorias ( nome )`)
-        .eq('ativo', true);
-
-      if (filterType === 'destaques') {
-        query = query.eq('destaque', true);
-      } else if (filterType === 'promo') {
-        query = query.eq('em_oferta', true);
-      }
-
-      const { data, error } = await query;
+        .select(`*, categorias ( nome ), avaliacoes ( nota )`)
+        .eq('ativo', true)
+        .order('id', { ascending: false });
 
       if (error) throw error;
 
-      const formattedData = data.map(item => {
-        const getFullUrl = (imgName) => {
-          if (!imgName) return null;
-          if (imgName.startsWith('http')) return imgName;
-          const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(imgName);
-          return data.publicUrl;
-        };
+      if (data) {
+        const BUCKET_NAME = 'imagens-produtos';
+        let formattedData = data.map(item => {
+          const getFullUrl = (imgName) => {
+            if (!imgName) return null;
+            if (imgName.startsWith('http')) return imgName;
+            return supabase.storage.from(BUCKET_NAME).getPublicUrl(imgName).data.publicUrl;
+          };
 
-        const mainImage = getFullUrl(item.imagem_url);
-        const rawGallery = [item.imagem_url_2, item.imagem_url_3];
-        const galleryProcessed = rawGallery
-          .map(img => getFullUrl(img))
-          .filter(link => link !== null);
+          const avaliacoes = item.avaliacoes || [];
+          const media = avaliacoes.length > 0 ? (avaliacoes.reduce((a, c) => a + c.nota, 0) / avaliacoes.length).toFixed(1) : null;
 
-        return {
-          ...item,
-          id: item.id,
-          title: item.nome,
-          price: item.preco,
-          oldPrice: item.preco_antigo,
-          description: item.descricao,
-          image: mainImage,
-          gallery: galleryProcessed,
-          options: item.opcoes || [], 
-          category: item.categorias?.nome || 'Geral',
-          badge: item.badge
-        };
-      });
+          return {
+            ...item,
+            imagem_url: getFullUrl(item.imagem_url),
+            category: item.categorias?.nome || 'Geral',
+            averageRating: media
+          };
+        });
 
-      setProducts(formattedData);
+        if (filterType === 'destaques') {
+          formattedData = formattedData.filter(p => p.destaque === true);
+        } else if (filterType === 'promo') {
+          formattedData = formattedData.filter(p => p.preco_antigo && p.preco_antigo > p.preco);
+        }
 
-    } catch (error) {
-      console.error("Erro ao carregar catálogo:", error.message);
+        setProducts(formattedData);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar produtos:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleAddToCart = (item) => {
-    addToCart(item);
-    setSelectedProduct(null);
-  };
-
-  const getSortedProducts = () => {
-    const list = [...products];
-    if (sortOrder === 'asc') {
-      return list.sort((a, b) => a.price - b.price);
-    } else if (sortOrder === 'desc') {
-      return list.sort((a, b) => b.price - a.price);
-    }
-    return list;
-  };
-
-  const displayedProducts = getSortedProducts();
-
-  let pageTitle = "Catálogo Completo";
-  if (filterType === 'destaques') pageTitle = "Produtos em Destaque";
-  if (filterType === 'promo') pageTitle = "Ofertas Imperdíveis";
-
-  if (loading) return <div style={{color: 'white', padding: 40, textAlign: 'center'}}>Carregando produtos...</div>;
+  let title = "Todos os Produtos";
+  if (filterType === 'destaques') title = "Destaques";
+  if (filterType === 'promo') title = "Ofertas Imperdíveis";
 
   return (
-    <div className="category-page">
-      <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '30px'}}>
-         <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-            <button 
-              onClick={() => window.history.back()} 
-              style={{background: 'none', border: '1px solid #333', color: 'white', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer'}}
-            >
-              ←
-            </button>
-            <div>
-                <h1 style={{margin: 0, color: filterType === 'promo' ? '#ff4d4d' : filterType === 'destaques' ? 'var(--neon-primary)' : 'white'}}>
-                    {pageTitle}
-                </h1>
-                <span style={{color: '#888', fontSize: '0.9rem'}}>{products.length} produtos encontrados</span>
-            </div>
-         </div>
-
-         <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-            <select 
-              value={sortOrder} 
-              onChange={(e) => setSortOrder(e.target.value)}
-              style={{
-                background: '#111', 
-                color: 'white', 
-                border: '1px solid #333', 
-                padding: '10px 15px', 
-                borderRadius: '8px',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="default">Ordenar por: Padrão</option>
-              <option value="asc">Menor Preço 🡡</option>
-              <option value="desc">Maior Preço 🡣</option>
-            </select>
-         </div>
-      </div>
-      
-      <div className="products-grid">
-        {displayedProducts.map((product) => (
-          <div 
-            key={product.id} 
-            className="product-card"
-            onClick={() => setSelectedProduct(product)}
-          >
-            <div className="card-image">
-              {product.badge && <span className="tag" style={{top: 10, left: 10, background: 'var(--neon-primary)', color:'black'}}>{product.badge}</span>}
-              <img src={product.image || 'https://via.placeholder.com/300'} alt={product.title} />
-            </div>
-            <div className="card-info">
-              <span className="tag">{product.category}</span>
-              <h3>{product.title}</h3>
-              <div className="card-footer">
-                <div style={{display:'flex', flexDirection:'column'}}>
-                    {product.oldPrice > 0 && (
-                        <span style={{textDecoration: 'line-through', color: '#666', fontSize: '0.8rem'}}>
-                            R$ {Number(product.oldPrice).toFixed(2)}
-                        </span>
-                    )}
-                    <span className="price">R$ {Number(product.price).toFixed(2)}</span>
-                </div>
-                <button className="btn-plus">+</button>
-              </div>
-            </div>
-          </div>
-        ))}
+    <div className="container py-5 mt-4">
+      <div className="d-flex align-items-center mb-4">
+        <Link to="/" className="btn btn-sm btn-outline-light me-3" style={{borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>←</Link>
+        <div>
+            <h2 className="fw-bold text-white m-0" style={{color: filterType === 'promo' ? '#ff4d4d' : 'white'}}>{title}</h2>
+            <span className="text-secondary small">{products.length} produtos encontrados</span>
+        </div>
       </div>
 
-      {selectedProduct && (
-        <ProductModal 
-          isOpen={!!selectedProduct} 
-          onClose={() => setSelectedProduct(null)}
-          product={selectedProduct}
-          onAddToCart={handleAddToCart}
-        />
+      {loading ? (
+        <div className="text-center text-white py-5 mt-5">
+            <div className="spinner-border text-warning" role="status"></div>
+            <p className="mt-3">Buscando produtos...</p>
+        </div>
+      ) : products.length > 0 ? (
+        <div className="row g-3 g-md-4">
+          {products.map(p => (
+            <div key={p.id} className="col-6 col-md-4 col-lg-3">
+              <ProductCard p={p} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-5 mt-5 border border-secondary rounded-4" style={{background: '#111'}}>
+           <h5 className="text-secondary mb-0">Nenhum produto encontrado nesta seção.</h5>
+        </div>
       )}
     </div>
   );
-};
+}
