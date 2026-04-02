@@ -1,196 +1,202 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom'; 
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import './Combo.css';
 
-export const ComboBuilderPage = () => {
-  const { addToCart, setIsCartOpen } = useCart(); 
-  const navigate = useNavigate();
+export function ComboBuilderPage() {
+  const [teclados, setTeclados] = useState([]);
+  const [mouses, setMouses] = useState([]);
+  const [headsets, setHeadsets] = useState([]);
+  
+  const [selectedTeclado, setSelectedTeclado] = useState(null);
+  const [selectedMouse, setSelectedMouse] = useState(null);
+  const [selectedHeadset, setSelectedHeadset] = useState(null);
+  
+  const [discountPercent, setDiscountPercent] = useState(10);
   const [loading, setLoading] = useState(true);
-  
-  const [allProducts, setAllProducts] = useState([]);
-  
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selection, setSelection] = useState({
-    keyboard: null,
-    mouse: null,
-    headset: null
-  });
 
-  const CATEGORY_IDS = {
-    KEYBOARD: 3,
-    MOUSE: 2,
-    HEADSET: 4
-  };
+  const { addToCart, setIsCartOpen } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchProducts();
+    fetchComboData();
   }, []);
 
-  const fetchProducts = async () => {
+  async function fetchComboData() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('produtos')
-      .select('*')
-      .eq('ativo', true)
-      .in('id_categoria', [CATEGORY_IDS.KEYBOARD, CATEGORY_IDS.MOUSE, CATEGORY_IDS.HEADSET]);
+    try {
+      const { data: configData } = await supabase.from('configuracoes').select('desconto_combo').eq('id', 1).single();
+      if (configData && configData.desconto_combo) {
+          setDiscountPercent(configData.desconto_combo);
+      }
 
-    if (!error && data) {
-        const formatted = data.map(p => ({
-            ...p,
-            price: p.preco,
-            title: p.nome,
-            image: p.imagem_url && p.imagem_url.startsWith('http') 
-                ? p.imagem_url 
-                : null 
+      const { data: prodData, error } = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('ativo', true)
+        .in('id_categoria', [2, 3, 4]);
+
+      if (error) throw error;
+
+      if (prodData) {
+        const BUCKET_NAME = 'imagens-produtos';
+        const getFullUrl = (imgName) => {
+          if (!imgName) return null;
+          if (imgName.startsWith('http')) return imgName;
+          const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(imgName);
+          return data.publicUrl;
+        };
+
+        const formattedData = prodData.map(item => ({
+            ...item,
+            imagem_url: getFullUrl(item.imagem_url)
         }));
-        setAllProducts(formatted);
+
+        setMouses(formattedData.filter(p => p.id_categoria === 2));
+        setTeclados(formattedData.filter(p => p.id_categoria === 3));
+        setHeadsets(formattedData.filter(p => p.id_categoria === 4));
+      }
+    } catch (err) {
+      console.error("Erro ao carregar itens do combo:", err);
+      toast.error("Erro ao carregar os produtos.", { theme: "dark" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }
 
-  const getProductsByCategory = (catId) => allProducts.filter(p => p.id_categoria === catId);
-  
-  const handleSelect = (product, type) => {
-    setSelection({ ...selection, [type]: product });
-    setCurrentStep(prev => prev + 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const subtotal = (selectedTeclado?.preco || 0) + (selectedMouse?.preco || 0) + (selectedHeadset?.preco || 0);
+  const isComplete = selectedTeclado && selectedMouse && selectedHeadset;
+  const totalWithDiscount = isComplete ? subtotal * (1 - discountPercent / 100) : subtotal;
+  const economia = subtotal - totalWithDiscount;
 
-  const handleFinalize = () => {
-    const applyDiscount = (item) => ({
-        ...item,
+  const handleAddToCart = () => {
+    if (!isComplete) {
+        toast.warning("Selecione os 3 itens para montar o combo!", { theme: "dark" });
+        return;
+    }
+
+    const comboItem = {
+        id: `combo-${Date.now()}`,
+        nome: `Kit Gamer (${selectedTeclado.nome} + ${selectedMouse.nome} + ${selectedHeadset.nome})`,
+        preco: totalWithDiscount,
+        imagem_url: selectedTeclado.imagem_url,
         quantity: 1,
-        price: item.price * 0.9, 
-        combo: true 
-    });
+        categoria: 'Combo Customizado'
+    };
 
-    if (selection.keyboard) addToCart(applyDiscount(selection.keyboard));
-    if (selection.mouse) addToCart(applyDiscount(selection.mouse));
-    if (selection.headset) addToCart(applyDiscount(selection.headset));
-    
-    setIsCartOpen(true); 
-    navigate('/'); 
+    addToCart(comboItem);
+    toast.success("Combo adicionado ao carrinho! 🛒", { theme: "dark" });
+    setIsCartOpen(true);
+    navigate('/');
   };
 
-  const subtotal = (selection.keyboard?.price || 0) + (selection.mouse?.price || 0) + (selection.headset?.price || 0);
-  const discount = subtotal * 0.10; 
-  const total = subtotal - discount;
+  const ComboCard = ({ product, type, selectedItem, onSelect }) => {
+    const isSelected = selectedItem?.id === product.id;
+    return (
+      <div className="col-6 col-md-4 mb-4">
+        <div className={`combo-product-card ${isSelected ? 'selected' : ''}`} onClick={() => onSelect(product)}>
+          <div className="combo-img-wrapper">
+             <img src={product.imagem_url} alt={product.nome} />
+          </div>
+          <div className="combo-card-body">
+             <span className="combo-card-category">{type}</span>
+             <h6 className="combo-card-title text-truncate">{product.nome}</h6>
+             <div className="combo-card-price">R$ {product.preco.toFixed(2)}</div>
+             <button className={`btn-select-combo mt-2 ${isSelected ? 'selected' : ''}`}>
+                 {isSelected ? 'SELECIONADO ✓' : 'ESCOLHER'}
+             </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-  if (loading) return <div className="text-white text-center p-5">Carregando montador...</div>;
+  if (loading) {
+      return <div className="text-center text-white mt-5 pt-5 fw-bold fs-4">Carregando equipamentos... ⚡</div>;
+  }
 
   return (
-    <div className="combo-container">
-      <div style={{textAlign: 'center', marginBottom: '30px'}}>
-        <h1 style={{color: 'white', fontWeight: 'bold'}}>Monte seu <span style={{color: 'var(--neon-primary)'}}>Combo Gamer</span></h1>
-        <p style={{color: '#aaa'}}>Escolha seus periféricos e ganhe 10% de desconto no kit completo!</p>
+    <div className="combo-builder-container rounded-4 mt-3">
+      <div className="container px-4">
+        <div className="text-center mb-5">
+            <h1 className="fw-bold text-white mb-2" style={{fontSize: '2.5rem'}}>Monte seu <span style={{color: 'var(--neon-primary)'}}>Combo Gamer</span></h1>
+            <p className="text-secondary fs-5">Selecione 1 Teclado, 1 Mouse e 1 Headset para desbloquear <b>{discountPercent}% de desconto</b> no kit!</p>
+        </div>
+
+        <div className="row">
+          <div className="col-lg-8">
+            <h4 className="combo-section-title">1. Escolha seu Teclado</h4>
+            <div className="row g-3 mb-5">
+               {teclados.map(p => <ComboCard key={p.id} product={p} type="Teclado" selectedItem={selectedTeclado} onSelect={setSelectedTeclado} />)}
+            </div>
+
+            <h4 className="combo-section-title">2. Escolha seu Mouse</h4>
+            <div className="row g-3 mb-5">
+               {mouses.map(p => <ComboCard key={p.id} product={p} type="Mouse" selectedItem={selectedMouse} onSelect={setSelectedMouse} />)}
+            </div>
+
+            <h4 className="combo-section-title">3. Escolha seu Headset</h4>
+            <div className="row g-3 mb-5">
+               {headsets.map(p => <ComboCard key={p.id} product={p} type="Áudio" selectedItem={selectedHeadset} onSelect={setSelectedHeadset} />)}
+            </div>
+          </div>
+
+          <div className="col-lg-4">
+            <div className="combo-summary-col">
+              <div className="combo-summary-card">
+                 <h4 className="combo-summary-title">Seu Setup</h4>
+                 
+                 <ul className="combo-items-list">
+                    <li className="combo-item-entry">
+                        <span className="label">Teclado:</span>
+                        <span className="value text-truncate ms-3" style={{maxWidth: '150px'}}>{selectedTeclado ? selectedTeclado.nome : 'Pendente...'}</span>
+                    </li>
+                    <li className="combo-item-entry">
+                        <span className="label">Mouse:</span>
+                        <span className="value text-truncate ms-3" style={{maxWidth: '150px'}}>{selectedMouse ? selectedMouse.nome : 'Pendente...'}</span>
+                    </li>
+                    <li className="combo-item-entry">
+                        <span className="label">Headset:</span>
+                        <span className="value text-truncate ms-3" style={{maxWidth: '150px'}}>{selectedHeadset ? selectedHeadset.nome : 'Pendente...'}</span>
+                    </li>
+                 </ul>
+
+                 <div className="border-top border-secondary pt-3 mb-3">
+                     <div className="d-flex justify-content-between text-secondary mb-2">
+                         <span>Subtotal:</span>
+                         <span>R$ {subtotal.toFixed(2)}</span>
+                     </div>
+                     {isComplete && (
+                         <div className="d-flex justify-content-between mb-2" style={{color: '#00e676'}}>
+                             <span>Desconto Combo ({discountPercent}%):</span>
+                             <span>- R$ {economia.toFixed(2)}</span>
+                         </div>
+                     )}
+                 </div>
+
+                 <div className="combo-total-price">
+                     R$ {totalWithDiscount.toFixed(2)}
+                 </div>
+
+                 <button 
+                    className="btn-checkout-combo d-flex align-items-center justify-content-center gap-2" 
+                    onClick={handleAddToCart}
+                    disabled={!isComplete}
+                 >
+                    {isComplete ? 'ADICIONAR AO CARRINHO' : `FALTA ${(!selectedTeclado ? 1 : 0) + (!selectedMouse ? 1 : 0) + (!selectedHeadset ? 1 : 0)} ITEM(S)`}
+                 </button>
+                 
+                 {!isComplete && (
+                     <p className="text-center text-secondary small mt-3 m-0">Preencha todos os passos para liberar o botão.</p>
+                 )}
+              </div>
+            </div>
+          </div>
+          
+        </div>
       </div>
-
-      <div className="steps-indicator">
-        <div className={`step-pill ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>1. Teclado</div>
-        <div className={`step-pill ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>2. Mouse</div>
-        <div className={`step-pill ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>3. Headset</div>
-        <div className={`step-pill ${currentStep === 4 ? 'active' : ''}`}>4. Resumo</div>
-      </div>
-
-      {currentStep === 1 && (
-        <div className="selection-grid fade-in">
-          {getProductsByCategory(CATEGORY_IDS.KEYBOARD).map(p => (
-            <div key={p.id} className="combo-item-card" onClick={() => handleSelect(p, 'keyboard')}>
-              <img src={p.image || 'https://via.placeholder.com/150'} alt={p.nome} />
-              <div className="info">
-                <h5 style={{fontSize: '0.9rem', marginBottom: 5}}>{p.nome}</h5>
-                <span style={{color: 'var(--neon-primary)', fontWeight: 'bold'}}>R$ {p.price}</span>
-                <button className="select-btn">Selecionar</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {currentStep === 2 && (
-        <div className="selection-grid fade-in">
-          {getProductsByCategory(CATEGORY_IDS.MOUSE).map(p => (
-            <div key={p.id} className="combo-item-card" onClick={() => handleSelect(p, 'mouse')}>
-              <img src={p.image || 'https://via.placeholder.com/150'} alt={p.nome} />
-              <div className="info">
-                <h5 style={{fontSize: '0.9rem', marginBottom: 5}}>{p.nome}</h5>
-                <span style={{color: 'var(--neon-primary)', fontWeight: 'bold'}}>R$ {p.price}</span>
-                <button className="select-btn">Selecionar</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {currentStep === 3 && (
-        <div className="selection-grid fade-in">
-          {getProductsByCategory(CATEGORY_IDS.HEADSET).map(p => (
-            <div key={p.id} className="combo-item-card" onClick={() => handleSelect(p, 'headset')}>
-              <img src={p.image || 'https://via.placeholder.com/150'} alt={p.nome} />
-              <div className="info">
-                <h5 style={{fontSize: '0.9rem', marginBottom: 5}}>{p.nome}</h5>
-                <span style={{color: 'var(--neon-primary)', fontWeight: 'bold'}}>R$ {p.price}</span>
-                <button className="select-btn">Selecionar</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {currentStep === 4 && (
-        <div className="summary-box fade-in">
-           <h2>Seu Combo Supremo</h2>
-           
-           <div className="selected-items-list">
-              <div className="mini-card">
-                 <img src={selection.keyboard?.image} style={{width:'100%', height: 60, objectFit:'contain'}} alt="Teclado" />
-                 <p style={{fontSize:'0.7rem', margin: '5px 0'}}>Teclado</p>
-              </div>
-              <div className="mini-card">
-                 <img src={selection.mouse?.image} style={{width:'100%', height: 60, objectFit:'contain'}} alt="Mouse" />
-                 <p style={{fontSize:'0.7rem', margin: '5px 0'}}>Mouse</p>
-              </div>
-              <div className="mini-card">
-                 <img src={selection.headset?.image} style={{width:'100%', height: 60, objectFit:'contain'}} alt="Fone" />
-                 <p style={{fontSize:'0.7rem', margin: '5px 0'}}>Headset</p>
-              </div>
-           </div>
-
-           <div className="total-price-box">
-             <div style={{fontSize: '1rem', color: '#888', textDecoration: 'line-through'}}>De: R$ {subtotal.toFixed(2)}</div>
-             <div style={{color: 'white', fontWeight: 'bold'}}>
-               Por: <span style={{color: 'var(--neon-primary)'}}>R$ {total.toFixed(2)}</span>
-               <span className="discount-tag">-10% OFF</span>
-             </div>
-           </div>
-
-           <div style={{display: 'flex', gap: 10, justifyContent: 'center'}}>
-             <button 
-               onClick={() => {setSelection({keyboard:null, mouse:null, headset:null}); setCurrentStep(1);}} 
-               style={{padding: '12px 20px', background: '#333', color:'white', border:'none', borderRadius: 8, cursor:'pointer'}}
-             >
-               Refazer
-             </button>
-             <button 
-               className="btn-neon" 
-               style={{padding: '12px 40px', fontSize: '1.1rem'}}
-               onClick={handleFinalize}
-             >
-               COMPRAR COMBO AGORA 🛒
-             </button>
-           </div>
-        </div>
-      )}
-
-      {currentStep > 1 && currentStep < 4 && (
-         <div style={{textAlign: 'center', marginTop: 30}}>
-            <button onClick={() => setCurrentStep(prev => prev - 1)} style={{background: 'none', border:'none', color: '#888', textDecoration: 'underline', cursor: 'pointer'}}>
-               ← Voltar passo anterior
-            </button>
-         </div>
-      )}
     </div>
   );
-};
+}

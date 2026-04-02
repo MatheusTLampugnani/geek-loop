@@ -1,126 +1,207 @@
-.combo-container {
-  padding: 80px 20px 40px;
-  background-color: #000;
-  min-height: 100vh;
-  color: #fff;
+.combo-builder-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    background-color: #0a0a0a;
 }
 
-.steps-indicator {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 40px;
+.combo-section-title {
+    color: #fff;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 8px;
+    margin-bottom: 1.5rem;
 }
 
-.step-pill {
-  background: #222;
-  border: 1px solid #444;
-  padding: 10px 20px;
-  border-radius: 50px;
-  color: #888;
-  font-weight: bold;
-  font-size: 0.9rem;
-  transition: 0.3s;
+.combo-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-primary, #ffc107), transparent);
 }
 
-.step-pill.active {
-  background: var(--neon-primary);
-  color: #000;
-  border-color: var(--neon-primary);
-  box-shadow: 0 0 10px var(--neon-primary);
+.combo-product-card {
+    background-color: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    height: 100%;
+    color: #eee;
+    position: relative;
 }
 
-.step-pill.completed {
-  background: #333;
-  color: var(--neon-primary);
-  border-color: var(--neon-primary);
+.combo-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
 }
 
-.selection-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+.combo-img-wrapper {
+    aspect-ratio: 1;
+    background: #0d0d0d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.combo-item-card {
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: 0.2s;
-  text-align: center;
+.combo-product-card img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
 }
 
-.combo-item-card:hover {
-  border-color: var(--neon-primary);
-  transform: translateY(-5px);
+.combo-card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
-.combo-item-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: contain;
-  background: #000;
-  padding: 10px;
+.combo-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.25rem;
 }
 
-.combo-item-card .info {
-  padding: 15px;
+.combo-card-category {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
 }
 
-.select-btn {
-  background: #333;
-  color: white;
-  border: none;
-  width: 100%;
-  padding: 8px;
-  margin-top: 10px;
-  border-radius: 4px;
-  font-weight: bold;
+.combo-card-price {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fff;
+    margin-top: auto;
+    margin-bottom: 1rem;
 }
 
-.combo-item-card:hover .select-btn {
-  background: var(--neon-primary);
-  color: black;
+.btn-select-combo {
+    background: transparent;
+    border: 2px solid var(--neon-primary, #ffc107);
+    color: var(--neon-primary, #ffc107);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    padding: 10px 15px;
+    width: 100%;
+    transition: all 0.2s;
 }
 
-.summary-box {
-  background: #111;
-  border: 1px solid var(--neon-primary);
-  padding: 30px;
-  border-radius: 12px;
-  max-width: 600px;
-  margin: 0 auto;
-  text-align: center;
+.btn-select-combo:hover {
+    background: var(--neon-primary, #ffc107);
+    color: #000;
 }
 
-.selected-items-list {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin: 20px 0;
-  flex-wrap: wrap;
+.combo-product-card.selected {
+    border-color: var(--neon-primary, #ffc107);
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.15);
 }
 
-.mini-card {
-  background: #222;
-  padding: 10px;
-  border-radius: 8px;
-  width: 120px;
+.btn-select-combo.selected {
+    background: var(--neon-primary, #ffc107);
+    color: #000;
 }
 
-.total-price-box {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
+.combo-summary-col {
+    position: sticky;
+    top: 100px;
+    height: max-content;
+    z-index: 10;
 }
 
-.discount-tag {
-  background: #00ff88;
-  color: #000;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  margin-left: 10px;
-  font-weight: bold;
+.combo-summary-card {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 2rem;
+    color: #eee;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.combo-summary-title {
+    color: #fff;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+}
+
+.combo-items-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+.combo-item-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.9rem;
+}
+
+.combo-item-entry:last-child {
+    border-bottom: none;
+}
+
+.combo-item-entry .label {
+    color: #aaa;
+}
+
+.combo-item-entry .value {
+    color: #fff;
+    font-weight: 600;
+}
+
+.combo-total-price {
+    font-size: 2.25rem;
+    font-weight: 900;
+    color: var(--neon-primary, #ffc107);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.btn-checkout-combo {
+    background: var(--neon-primary, #ffc107);
+    color: #000;
+    font-weight: 900;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    width: 100%;
+    font-size: 1.1rem;
+    transition: all 0.2s ease-out;
+    box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+}
+
+.btn-checkout-combo:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+}
+
+.btn-checkout-combo:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
 }
