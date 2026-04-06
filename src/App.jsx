@@ -156,8 +156,8 @@ function HomePage({ setSelectedProduct }) {
     }
   }
 
-  const destaques = products.filter(p => p.isFeatured === true).slice(0, 4); 
-  const ofertas = products.filter(p => p.oldPrice && p.oldPrice > p.price).slice(0, 4);
+  const destaques = products.filter(p => p.isFeatured === true); 
+  const ofertas = products.filter(p => p.oldPrice && p.oldPrice > p.price);
   const infiniteReviews = [...globalReviews, ...globalReviews, ...globalReviews];
 
   return (
@@ -285,7 +285,7 @@ function HomePage({ setSelectedProduct }) {
               </div>
             </div>
             <div className="col-lg-6 d-flex align-items-center justify-content-center position-relative py-4" style={{minHeight: '300px'}}>
-               <div className="position-absolute rounded-circle" style={{width: '250px', height: '250px', background: 'var(--neon-primary)', filter: 'blur(100px)', opacity: 0.15}}></div>
+               <div className="position-absolute rounded-circle" style={{width: '250px', height: '250px', background: 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%)', pointerEvents: 'none'}}></div>
                <img src={comboImg} alt="Exemplo de Combo" className="img-fluid position-relative z-1" style={{maxWidth: '85%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'}} />
             </div>
           </div>
@@ -397,10 +397,10 @@ function StoreContent() {
         <div className="container pb-5">
            <Routes>
               <Route path="/" element={<HomePage setSelectedProduct={setSelectedProduct} />} />
-              <Route path="/todos-produtos" element={<AllProductsPage />} />
-              <Route path="/destaques" element={<AllProductsPage filterType="destaques" />} />
-              <Route path="/ofertas" element={<AllProductsPage filterType="promo" />} />
-              <Route path="/categoria/:id" element={<CategoryPage />} />
+              <Route path="/todos-produtos" element={<AllProductsPage setSelectedProduct={setSelectedProduct} />} />
+              <Route path="/destaques" element={<AllProductsPage filterType="destaques" setSelectedProduct={setSelectedProduct} />} />
+              <Route path="/ofertas" element={<AllProductsPage filterType="promo" setSelectedProduct={setSelectedProduct} />} />
+              <Route path="/categoria/:id" element={<CategoryPage setSelectedProduct={setSelectedProduct} />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/monte-seu-combo" element={<ComboBuilderPage />} />
               <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
