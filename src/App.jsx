@@ -285,7 +285,7 @@ function HomePage({ setSelectedProduct }) {
               </div>
             </div>
             <div className="col-lg-6 d-flex align-items-center justify-content-center position-relative py-4" style={{minHeight: '300px'}}>
-               <div className="position-absolute rounded-circle" style={{width: '250px', height: '250px', background: 'var(--neon-primary)', filter: 'blur(100px)', opacity: 0.15}}></div>
+               <div className="position-absolute rounded-circle" style={{width: '250px', height: '250px', background: 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%)', pointerEvents: 'none'}}></div>
                <img src={comboImg} alt="Exemplo de Combo" className="img-fluid position-relative z-1" style={{maxWidth: '85%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'}} />
             </div>
           </div>
