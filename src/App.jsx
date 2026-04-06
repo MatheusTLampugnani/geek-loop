@@ -156,8 +156,8 @@ function HomePage({ setSelectedProduct }) {
     }
   }
 
-  const destaques = products.filter(p => p.isFeatured === true).slice(0, 4); 
-  const ofertas = products.filter(p => p.oldPrice && p.oldPrice > p.price).slice(0, 4);
+  const destaques = products.filter(p => p.isFeatured === true); 
+  const ofertas = products.filter(p => p.oldPrice && p.oldPrice > p.price);
   const infiniteReviews = [...globalReviews, ...globalReviews, ...globalReviews];
 
   return (
@@ -397,10 +397,10 @@ function StoreContent() {
         <div className="container pb-5">
            <Routes>
               <Route path="/" element={<HomePage setSelectedProduct={setSelectedProduct} />} />
-              <Route path="/todos-produtos" element={<AllProductsPage />} />
-              <Route path="/destaques" element={<AllProductsPage filterType="destaques" />} />
-              <Route path="/ofertas" element={<AllProductsPage filterType="promo" />} />
-              <Route path="/categoria/:id" element={<CategoryPage />} />
+              <Route path="/todos-produtos" element={<AllProductsPage setSelectedProduct={setSelectedProduct} />} />
+              <Route path="/destaques" element={<AllProductsPage filterType="destaques" setSelectedProduct={setSelectedProduct} />} />
+              <Route path="/ofertas" element={<AllProductsPage filterType="promo" setSelectedProduct={setSelectedProduct} />} />
+              <Route path="/categoria/:id" element={<CategoryPage setSelectedProduct={setSelectedProduct} />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/monte-seu-combo" element={<ComboBuilderPage />} />
               <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
